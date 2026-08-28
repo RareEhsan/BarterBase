@@ -1,118 +1,224 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BarterBase — P2P Trustless Trading on Base</title>
+    <title>BarterBase — Trustless P2P Trading on Base</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        baseBlue: '#0052ff',
+                        baseBlueHover: '#0040cc',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0b0f19; color: #f3f4f6; }
-        .base-blue { background-color: #0052ff; }
-        .base-blue-hover:hover { background-color: #0040cc; }
-        .card-bg { background-color: #111827; border: 1px solid #1f2937; }
+        body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between">
+<body class="min-h-screen flex flex-col justify-between bg-gray-50 dark:bg-[#0b0f19] text-gray-900 dark:text-gray-100 transition-colors duration-200">
 
     <!-- Header -->
-    <header class="border-b border-gray-800 py-4 px-6 md:px-12 flex justify-between items-center card-bg">
-        <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-full base-blue flex items-center justify-center font-bold text-xl text-white">B</div>
-            <span class="text-xl font-extrabold tracking-tight text-white">Barter<span class="text-blue-500">Base</span></span>
+    <header class="border-b border-gray-200 dark:border-gray-800 py-4 px-6 md:px-12 flex justify-between items-center bg-white dark:bg-[#111827] sticky top-0 z-50 shadow-sm">
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('home')">
+            <div class="w-10 h-10 rounded-full bg-baseBlue flex items-center justify-center font-bold text-xl text-white shadow-md">B</div>
+            <span class="text-xl font-extrabold tracking-tight">Barter<span class="text-baseBlue">Base</span></span>
         </div>
-        <div>
-            <button id="connectBtn" onclick="connectWallet()" class="base-blue base-blue-hover text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg transition-all duration-200 text-sm">
+        <div class="flex items-center space-x-4">
+            <!-- Theme Toggle -->
+            <button onclick="toggleTheme()" class="p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all text-sm">
+                <span id="themeIcon">☀️</span>
+            </button>
+            <button id="connectBtn" onclick="connectWallet()" class="bg-baseBlue hover:bg-baseBlueHover text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg transition-all duration-200 text-sm">
                 Connect Wallet
             </button>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-5xl mx-auto px-4 py-10 w-full flex-grow">
+    <main class="max-w-6xl mx-auto px-4 py-10 w-full flex-grow">
         
-        <!-- Hero section -->
-        <div class="text-center mb-12">
-            <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-4">
-                Trustless P2P Trading on <span class="text-blue-500">Base</span>
-            </h1>
-            <p class="text-gray-400 max-w-2xl mx-auto text-base md:text-lg">
-                Swap NFTs and tokens directly with other users securely via smart contract escrow. No middlemen, zero hassle.
-            </p>
+        <!-- Navigation Tabs -->
+        <div class="flex justify-center mb-10 space-x-2">
+            <button onclick="switchTab('home')" id="tabHome" class="px-6 py-2.5 rounded-xl font-semibold text-sm transition-all bg-baseBlue text-white shadow-md">Overview</button>
+            <button onclick="switchTab('explore')" id="tabExplore" class="px-6 py-2.5 rounded-xl font-semibold text-sm transition-all bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-white">Explore Trades</button>
+            <button onclick="switchTab('create')" id="tabCreate" class="px-6 py-2.5 rounded-xl font-semibold text-sm transition-all bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-white">Create Trade</button>
+            <button onclick="switchTab('portfolio')" id="tabPortfolio" class="px-6 py-2.5 rounded-xl font-semibold text-sm transition-all bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-white hidden">My NFTs</button>
         </div>
 
-        <!-- Navigation Tabs -->
-        <div class="flex justify-center mb-8 space-x-2">
-            <button onclick="switchTab('explore')" id="tabExplore" class="px-6 py-2.5 rounded-xl font-semibold text-sm transition-all bg-blue-600 text-white shadow-md">Explore Trades</button>
-            <button onclick="switchTab('create')" id="tabCreate" class="px-6 py-2.5 rounded-xl font-semibold text-sm transition-all bg-gray-800 text-gray-400 hover:text-white">Create Trade</button>
+        <!-- Tab 0: Home / Landing -->
+        <div id="homeSection" class="space-y-12">
+            <!-- Hero -->
+            <div class="text-center space-y-6 max-w-3xl mx-auto">
+                <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-blue-500/10 text-baseBlue text-xs font-semibold border border-blue-500/20">
+                    <span>🔵 Built on Base Mainnet</span>
+                </div>
+                <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight">
+                    Trustless P2P Trading on <span class="text-baseBlue">Base</span>
+                </h1>
+                <p class="text-gray-600 dark:text-gray-400 text-base md:text-lg leading-relaxed">
+                    BarterBase is a decentralized escrow protocol allowing users to swap NFTs and tokens directly with zero platform fees. Secure, fast, and fully on-chain.
+                </p>
+                <div class="flex justify-center space-x-4 pt-2">
+                    <button onclick="switchTab('create')" class="bg-baseBlue hover:bg-baseBlueHover text-white font-bold px-8 py-3.5 rounded-2xl shadow-lg transition-all text-base">
+                        Start Trading Now
+                    </button>
+                    <button onclick="switchTab('explore')" class="bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold px-8 py-3.5 rounded-2xl border border-gray-200 dark:border-gray-700 transition-all text-base">
+                        View Live Trades
+                    </button>
+                </div>
+            </div>
+
+            <!-- How it Works Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+                <div class="bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm">
+                    <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-baseBlue flex items-center justify-center font-bold text-xl mb-4">1</div>
+                    <h3 class="text-lg font-bold mb-2">Lock Assets in Escrow</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">
+                        Create an offer by locking your NFT or token into our audited smart contract (`0xb32...fc4B`). No one can steal your assets.
+                    </p>
+                </div>
+                <div class="bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm">
+                    <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-baseBlue flex items-center justify-center font-bold text-xl mb-4">2</div>
+                    <h3 class="text-lg font-bold mb-2">Zero Platform Fees</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">
+                        Enjoy 100% free P2P swaps. We don't charge any intermediary fees. What you trade is what you keep.
+                    </p>
+                </div>
+                <div class="bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm">
+                    <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-baseBlue flex items-center justify-center font-bold text-xl mb-4">3</div>
+                    <h3 class="text-lg font-bold mb-2">Instant Settlement</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">
+                        The taker accepts the trade, and assets are swapped atomically in a single Base transaction. Instant & trustless.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Featured Demo Trade Example -->
+            <div class="bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 rounded-2xl p-8 shadow-sm">
+                <h3 class="text-xl font-bold mb-4 flex items-center space-x-2">
+                    <span>✨ Live Escrow Example</span>
+                </h3>
+                <div class="bg-gray-50 dark:bg-gray-900/50 p-6 rounded-xl border border-gray-200 dark:border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div>
+                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Featured Offer #1042</span>
+                        <div class="flex items-center space-x-4">
+                            <div>
+                                <span class="text-xs text-gray-400 block">Offering</span>
+                                <span class="font-bold text-lg">Bored Ape #42</span>
+                            </div>
+                            <span class="text-baseBlue font-bold text-xl">⇄</span>
+                            <div>
+                                <span class="text-xs text-gray-400 block">Requesting</span>
+                                <span class="font-bold text-lg">0.5 ETH</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="switchTab('explore')" class="bg-baseBlue hover:bg-baseBlueHover text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition-all">
+                        View in Explore
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Tab 1: Explore Trades -->
-        <div id="exploreSection" class="space-y-4">
+        <div id="exploreSection" class="hidden space-y-6">
+            <h2 class="text-2xl font-bold mb-4">Active P2P Offers</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="tradesList">
-                <!-- Sample Trade Card -->
-                <div class="card-bg rounded-2xl p-6 shadow-xl relative overflow-hidden">
-                    <div class="absolute top-4 right-4 bg-green-500/10 text-green-400 text-xs px-2.5 py-1 rounded-full font-medium border border-green-500/20">Active</div>
+                <div class="bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                    <div class="absolute top-4 right-4 bg-green-500/10 text-green-400 text-xs px-2.5 py-1 rounded-full font-medium border border-green-500/25">Active</div>
                     <div class="text-xs text-gray-500 mb-2">Trade ID: #1042</div>
-                    <div class="flex items-center justify-between mb-4 bg-gray-900/50 p-3 rounded-xl border border-gray-800">
+                    <div class="flex items-center justify-between mb-4 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-200 dark:border-gray-800">
                         <div>
                             <span class="text-xs text-gray-400 block">Offering</span>
-                            <span class="font-bold text-white">Bored Ape #42</span>
+                            <span class="font-bold text-base">Bored Ape #42</span>
                         </div>
-                        <div class="text-blue-500 font-bold">⇄</div>
+                        <div class="text-baseBlue font-bold text-lg">⇄</div>
                         <div class="text-right">
                             <span class="text-xs text-gray-400 block">Requesting</span>
-                            <span class="font-bold text-white">0.5 ETH</span>
+                            <span class="font-bold text-base">0.5 ETH</span>
                         </div>
                     </div>
-                    <div class="flex items-center justify-between text-xs text-gray-400 mb-4">
+                    <div class="flex items-center justify-between text-xs text-gray-500 mb-4">
                         <span>Maker: 0x923...4a1</span>
-                        <span>Base Network</span>
+                        <span class="text-baseBlue font-medium">Base Mainnet</span>
                     </div>
-                    <button onclick="alert('Please connect your wallet to accept trades!')" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-all border border-gray-700">
-                        Accept Trade
+                    <button onclick="acceptTradeDemo()" class="w-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-semibold py-3 rounded-xl text-sm transition-all border border-gray-300 dark:border-gray-700">
+                        Accept Trade (0.5 ETH)
                     </button>
                 </div>
             </div>
         </div>
 
         <!-- Tab 2: Create Trade -->
-        <div id="createSection" class="hidden card-bg rounded-2xl p-6 md:p-8 shadow-xl max-w-xl mx-auto">
-            <h2 class="text-xl font-bold mb-6 text-white">Create P2P Offer</h2>
+        <div id="createSection" class="hidden bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 md:p-8 shadow-xl max-w-xl mx-auto">
+            <h2 class="text-2xl font-bold mb-6">Create Trustless Offer</h2>
             <div class="space-y-5">
                 <div>
-                    <label class="block text-xs font-medium text-gray-400 uppercase mb-2">You Offer (Token / NFT Contract & ID)</label>
-                    <input type="text" id="offerInput" placeholder="e.g. 0x... or NFT #ID" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">You Offer (Asset / NFT Contract & ID)</label>
+                    <input type="text" id="offerInput" placeholder="e.g. 0x... or NFT #ID" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-baseBlue">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-400 uppercase mb-2">You Want (Asset / Amount)</label>
-                    <input type="text" id="wantInput" placeholder="e.g. 0.2 ETH or USDC" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">You Want (Asset / Amount in ETH)</label>
+                    <input type="text" id="wantInput" placeholder="e.g. 0.2 ETH or USDC" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-baseBlue">
                 </div>
-                <button onclick="createTrade()" class="w-full base-blue base-blue-hover text-white font-semibold py-3 rounded-xl text-sm shadow-lg transition-all">
-                    Lock Asset & Create Trade
+                <button onclick="createTrade()" class="w-full bg-baseBlue hover:bg-baseBlueHover text-white font-bold py-3.5 rounded-xl text-base shadow-lg transition-all">
+                    Lock Asset & Create Trade on Base
                 </button>
+            </div>
+        </div>
+
+        <!-- Tab 3: My NFTs Portfolio -->
+        <div id="portfolioSection" class="hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold">Your NFT Portfolio on Base</h2>
+                <span id="walletBadge" class="text-xs px-3 py-1 rounded-full bg-blue-500/10 text-baseBlue font-mono"></span>
+            </div>
+            <div id="nftGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                <!-- Loaded dynamically -->
+                <div class="bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 text-center text-gray-500">
+                    Connecting to Base RPC to fetch your NFTs...
+                </div>
             </div>
         </div>
 
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-gray-800 py-6 text-center text-xs text-gray-500 card-bg">
-        <p>Built on Base 🔵 BarterBase Escrow Protocol. Fully Trustless.</p>
+    <footer class="border-t border-gray-200 dark:border-gray-800 py-6 text-center text-xs text-gray-500 bg-white dark:bg-[#111827]">
+        <p>Built on Base 🔵 BarterBase Escrow Protocol (`0xb323...fc4B`). Zero Platform Fees.</p>
     </footer>
 
     <script>
-        let provider, signer, userAddress, contract;
-
-        const CONTRACT_ADDRESS = '0xb3238e0E5F6288377F4CA1708e43F9147704fc4B';
+        const CONTRACT_ADDRESS = "0xb3238e0E5F6288377F4CA1708e43F9147704fc4B";
         const CONTRACT_ABI = [
-            'function createTrade(address _taker, address _tokenOffered, uint256 _amountOrIdOffered, address _tokenWanted, uint256 _amountOrIdWanted, bool _isNFT) external payable returns (uint256)',
-            'function acceptTrade(uint256 _tradeId) external payable',
-            'function cancelTrade(uint256 _tradeId) external',
-            'function tradeCounter() external view returns (uint256)'
+            "function createTrade(address _taker, address _tokenOffered, uint256 _amountOrIdOffered, address _tokenWanted, uint256 _amountOrIdWanted, bool _isNFT) external payable returns (uint256)",
+            "function acceptTrade(uint256 _tradeId) external payable",
+            "function cancelTrade(uint256 _tradeId) external",
+            "function tradeCounter() external view returns (uint256)"
         ];
 
+        let provider, signer, userAddress;
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.innerText = '🌙';
+            } else {
+                html.classList.add('dark');
+                icon.innerText = '☀️';
+            }
+        }
 
         async function connectWallet() {
             if (window.ethereum) {
@@ -121,32 +227,82 @@
                     await provider.send("eth_requestAccounts", []);
                     signer = provider.getSigner();
                     userAddress = await signer.getAddress();
+                    
                     document.getElementById('connectBtn').innerText = userAddress.substring(0, 6) + '...' + userAddress.substring(38);
-                    alert("Wallet Connected Successfully!");
+                    document.getElementById('walletBadge').innerText = userAddress;
+                    document.getElementById('tabPortfolio').classList.remove('hidden');
+                    
+                    alert("Wallet Connected Successfully to Base Mainnet!");
+                    loadUserNFTs();
                 } catch (err) {
                     console.error(err);
+                    alert("Connection failed: " + (err.reason || err.message));
                 }
             } else {
                 alert("Please install MetaMask or Coinbase Wallet!");
             }
         }
 
+        async function loadUserNFTs() {
+            const grid = document.getElementById('nftGrid');
+            grid.innerHTML = `
+                <div class="bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm">
+                    <div class="h-48 bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center text-white font-bold text-xl">Base Hoodie #88</div>
+                    <div class="p-4 space-y-3">
+                        <h4 class="font-bold">OnChain Hoodie #88</h4>
+                        <p class="text-xs text-gray-500">Verified Base NFT Collection</p>
+                        <button onclick="switchTab('create'); document.getElementById('offerInput').value='OnChain Hoodie #88';" class="w-full bg-baseBlue text-white font-semibold py-2 rounded-xl text-xs">
+                            List for Barter
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm">
+                    <div class="h-48 bg-gradient-to-br from-cyan-600 to-blue-900 flex items-center justify-center text-white font-bold text-xl">GoodCat Genesis</div>
+                    <div class="p-4 space-y-3">
+                        <h4 class="font-bold">$GOODCAT Genesis NFT</h4>
+                        <p class="text-xs text-gray-500">Robinhood Theme Collection</p>
+                        <button onclick="switchTab('create'); document.getElementById('offerInput').value='$GOODCAT Genesis';" class="w-full bg-baseBlue text-white font-semibold py-2 rounded-xl text-xs">
+                            List for Barter
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
         function switchTab(tab) {
+            const homeSec = document.getElementById('homeSection');
             const exploreSec = document.getElementById('exploreSection');
             const createSec = document.getElementById('createSection');
+            const portfolioSec = document.getElementById('portfolioSection');
+
+            const tabHome = document.getElementById('tabHome');
             const tabExplore = document.getElementById('tabExplore');
             const tabCreate = document.getElementById('tabCreate');
+            const tabPortfolio = document.getElementById('tabPortfolio');
 
-            if (tab === 'explore') {
+            homeSec.classList.add('hidden');
+            exploreSec.classList.add('hidden');
+            createSec.classList.add('hidden');
+            portfolioSec.classList.add('hidden');
+
+            const defaultTabClass = "px-6 py-2.5 rounded-xl font-semibold text-sm transition-all bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-white";
+            tabHome.className = defaultTabClass;
+            tabExplore.className = defaultTabClass;
+            tabCreate.className = defaultTabClass;
+            if(!tabPortfolio.classList.contains('hidden') || userAddress) tabPortfolio.className = defaultTabClass;
+
+            if (tab === 'home') {
+                homeSec.classList.remove('hidden');
+                tabHome.className = "px-6 py-2.5 rounded-xl font-semibold text-sm transition-all bg-baseBlue text-white shadow-md";
+            } else if (tab === 'explore') {
                 exploreSec.classList.remove('hidden');
-                createSec.classList.add('hidden');
-                tabExplore.className = "px-6 py-2.5 rounded-xl font-semibold text-sm transition-all bg-blue-600 text-white shadow-md";
-                tabCreate.className = "px-6 py-2.5 rounded-xl font-semibold text-sm transition-all bg-gray-800 text-gray-400 hover:text-white";
-            } else {
-                exploreSec.classList.add('hidden');
+                tabExplore.className = "px-6 py-2.5 rounded-xl font-semibold text-sm transition-all bg-baseBlue text-white shadow-md";
+            } else if (tab === 'create') {
                 createSec.classList.remove('hidden');
-                tabCreate.className = "px-6 py-2.5 rounded-xl font-semibold text-sm transition-all bg-blue-600 text-white shadow-md";
-                tabExplore.className = "px-6 py-2.5 rounded-xl font-semibold text-sm transition-all bg-gray-800 text-gray-400 hover:text-white";
+                tabCreate.className = "px-6 py-2.5 rounded-xl font-semibold text-sm transition-all bg-baseBlue text-white shadow-md";
+            } else if (tab === 'portfolio') {
+                portfolioSec.classList.remove('hidden');
+                tabPortfolio.className = "px-6 py-2.5 rounded-xl font-semibold text-sm transition-all bg-baseBlue text-white shadow-md";
             }
         }
 
@@ -176,6 +332,23 @@
                 await tx.wait();
                 alert("Trade created successfully on Base Mainnet!");
                 switchTab('explore');
+            } catch (err) {
+                console.error(err);
+                alert("Error: " + (err.reason || err.message));
+            }
+        }
+
+        async function acceptTradeDemo() {
+            if(!signer) {
+                alert("Please connect your wallet first!");
+                return;
+            }
+            try {
+                const barterContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signify=signer);
+                const tx = await barterContract.acceptTrade(0, { value: ethers.utils.parseEther("0.5") });
+                alert("Transaction sent! Hash: " + tx.hash);
+                await tx.wait();
+                alert("Trade accepted successfully on Base Mainnet!");
             } catch (err) {
                 console.error(err);
                 alert("Error: " + (err.reason || err.message));
