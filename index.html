@@ -6,6 +6,7 @@
     <title>BarterBase — Trustless P2P Trading on Base</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.14.2/dist/index.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -276,18 +277,45 @@
             document.getElementById('scannerAction').innerHTML = `<button onclick="connectWallet()" class="btn-primary text-white font-semibold px-9 py-3.5 rounded-xl text-sm">Connect Wallet to Scan Assets</button>`;
         }
 
+        const WC_PROJECT_ID = "c7b79c5fd466f0d602ab30c182442d0b";
+
         async function connectWallet() {
-            if (!window.ethereum) { alert("Please install MetaMask, Coinbase Wallet or use a Web3 browser!"); return; }
+            // 1) Injected provider (MetaMask / Coinbase extension on desktop, or mobile browser in-app)
+            if (window.ethereum) {
+                try {
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    await provider.send("eth_requestAccounts", []);
+                    signer = provider.getSigner();
+                    userAddress = await signer.getAddress();
+                    finishConnect();
+                    return;
+                } catch (err) { console.error(err); if (err.code === 4001) return; }
+            }
+            // 2) WalletConnect QR (mobile / no extension) — works on Windows & phone
             try {
-                provider = new ethers.providers.Web3Provider(window.ethereum);
-                await provider.send("eth_requestAccounts", []);
+                const wc = await EthereumProvider.init({
+                    projectId: WC_PROJECT_ID,
+                    chains: [8453, 1, 137, 10, 42161],
+                    methods: ["eth_sendTransaction", "personal_sign"],
+                    showQrModal: true,
+                });
+                await wc.enable();
+                provider = new ethers.providers.Web3Provider(wc);
                 signer = provider.getSigner();
                 userAddress = await signer.getAddress();
-                renderWalletConnected();
-                document.getElementById('assetDashboard').classList.remove('hidden');
-                document.getElementById('scannerAction').innerHTML = `<div class="text-emerald-400 font-mono text-sm">Wallet Connected Successfully ✓</div>`;
-                await loadAllAssets();
-            } catch (err) { console.error(err); alert("Connection failed: " + (err.reason || err.message)); }
+                wc.on("disconnect", () => disconnectWallet());
+                finishConnect();
+            } catch (err) {
+                console.error(err);
+                alert("Wallet connection failed: " + (err.message || err));
+            }
+        }
+
+        function finishConnect() {
+            renderWalletConnected();
+            document.getElementById('assetDashboard').classList.remove('hidden');
+            document.getElementById('scannerAction').innerHTML = `<div class="text-emerald-400 font-mono text-sm">Wallet Connected Successfully ✓</div>`;
+            loadAllAssets();
         }
 
         async function loadAllAssets() {
