@@ -103,7 +103,16 @@
     </footer>
 
     <script>
-        let provider, signer, userAddress;
+        let provider, signer, userAddress, contract;
+
+        const CONTRACT_ADDRESS = '0xb3238e0E5F6288377F4CA1708e43F9147704fc4B';
+        const CONTRACT_ABI = [
+            'function createTrade(address _taker, address _tokenOffered, uint256 _amountOrIdOffered, address _tokenWanted, uint256 _amountOrIdWanted, bool _isNFT) external payable returns (uint256)',
+            'function acceptTrade(uint256 _tradeId) external payable',
+            'function cancelTrade(uint256 _tradeId) external',
+            'function tradeCounter() external view returns (uint256)'
+        ];
+
 
         async function connectWallet() {
             if (window.ethereum) {
@@ -141,15 +150,36 @@
             }
         }
 
-        function createTrade() {
+        async function createTrade() {
             const offer = document.getElementById('offerInput').value;
             const want = document.getElementById('wantInput').value;
             if(!offer || !want) {
                 alert("Please fill in both fields!");
                 return;
             }
-            alert("Trade offer created successfully and locked in escrow! (Demo Mode)");
-            switchTab('explore');
+            if(!signer) {
+                alert("Please connect your wallet first!");
+                return;
+            }
+            try {
+                const barterContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+                const tx = await barterContract.createTrade(
+                    "0x0000000000000000000000000000000000000000",
+                    ethers.constants.AddressZero,
+                    ethers.utils.parseEther("0.001"),
+                    ethers.constants.AddressZero,
+                    ethers.utils.parseEther("0.001"),
+                    false,
+                    { value: ethers.utils.parseEther("0.001") }
+                );
+                alert("Transaction sent! Hash: " + tx.hash);
+                await tx.wait();
+                alert("Trade created successfully on Base Mainnet!");
+                switchTab('explore');
+            } catch (err) {
+                console.error(err);
+                alert("Error: " + (err.reason || err.message));
+            }
         }
     </script>
 </body>
