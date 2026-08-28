@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.14.2/dist/index.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/web3modal@1.9.12/dist/index.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -279,36 +280,50 @@
 
         const WC_PROJECT_ID = "c7b79c5fd466f0d602ab30c182442d0b";
 
+        let web3Modal;
+        function getWeb3Modal() {
+            if (web3Modal) return web3Modal;
+            web3Modal = new Web3Modal({
+                cacheProvider: false,
+                theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+                providerOptions: {
+                    walletconnect: {
+                        display: { name: "WalletConnect", description: "Scan with any mobile wallet" },
+                        package: EthereumProvider,
+                        options: {
+                            projectId: WC_PROJECT_ID,
+                            chains: [8453, 1, 137, 10, 42161],
+                            methods: ["eth_sendTransaction", "personal_sign"],
+                            showQrModal: true,
+                        }
+                    }
+                }
+            });
+            return web3Modal;
+        }
+
         async function connectWallet() {
-            // 1) Injected provider (MetaMask / Coinbase extension on desktop, or mobile browser in-app)
-            if (window.ethereum) {
-                try {
-                    provider = new ethers.providers.Web3Provider(window.ethereum);
-                    await provider.send("eth_requestAccounts", []);
-                    signer = provider.getSigner();
-                    userAddress = await signer.getAddress();
-                    finishConnect();
-                    return;
-                } catch (err) { console.error(err); if (err.code === 4001) return; }
-            }
-            // 2) WalletConnect QR (mobile / no extension) — works on Windows & phone
             try {
-                const wc = await EthereumProvider.init({
-                    projectId: WC_PROJECT_ID,
-                    chains: [8453, 1, 137, 10, 42161],
-                    methods: ["eth_sendTransaction", "personal_sign"],
-                    showQrModal: true,
-                });
-                await wc.enable();
-                provider = new ethers.providers.Web3Provider(wc);
-                signer = provider.getSigner();
-                userAddress = await signer.getAddress();
-                wc.on("disconnect", () => disconnectWallet());
-                finishConnect();
+                const modal = getWeb3Modal();
+                const instance = await modal.connect(); // opens the "choose wallet" sheet with Installed tags
+                provider = new ethers.providers.Web3Provider(instance);
+                // subscribe to accounts/chain changes & disconnect
+                instance.on("accountsChanged", (accts) => { if (!accts.length) disconnectWallet(); else connectFromInstance(instance); });
+                instance.on("disconnect", () => disconnectWallet());
+                await connectFromInstance(instance);
             } catch (err) {
                 console.error(err);
-                alert("Wallet connection failed: " + (err.message || err));
+                if (err.code !== 4001) alert("Wallet connection failed: " + (err.message || err));
             }
+        }
+
+        let currentInstance;
+        async function connectFromInstance(instance) {
+            currentInstance = instance;
+            provider = new ethers.providers.Web3Provider(instance);
+            signer = provider.getSigner();
+            userAddress = await signer.getAddress();
+            finishConnect();
         }
 
         function finishConnect() {
@@ -316,6 +331,15 @@
             document.getElementById('assetDashboard').classList.remove('hidden');
             document.getElementById('scannerAction').innerHTML = `<div class="text-emerald-400 font-mono text-sm">Wallet Connected Successfully ✓</div>`;
             loadAllAssets();
+        }
+
+        function disconnectWallet() {
+            if (currentInstance && currentInstance.close) { try { currentInstance.close(); } catch(e){} }
+            if (web3Modal && web3Modal.clearCachedProvider) web3Modal.clearCachedProvider();
+            provider = signer = userAddress = currentInstance = null;
+            document.getElementById('walletWrap').innerHTML = `<button id="connectBtn" onclick="connectWallet()" class="btn-primary text-white font-semibold px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[13px] sm:text-sm">Connect</button>`;
+            document.getElementById('assetDashboard').classList.add('hidden');
+            document.getElementById('scannerAction').innerHTML = `<button onclick="connectWallet()" class="btn-primary text-white font-semibold px-9 py-3.5 rounded-xl text-sm">Connect Wallet to Scan Assets</button>`;
         }
 
         async function loadAllAssets() {
