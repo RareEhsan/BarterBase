@@ -101,7 +101,7 @@
                 </button>
                 <!-- Wallet button -->
                 <div id="walletWrap">
-                    <button id="connectBtn" onclick="connectWallet()" class="btn-primary text-white font-semibold px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[13px] sm:text-sm flex items-center space-x-2">
+                    <button id="connectBtn" onclick="openWalletPicker()" class="btn-primary text-white font-semibold px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[13px] sm:text-sm flex items-center space-x-2">
                         <span>Connect</span>
                     </button>
                 </div>
@@ -126,7 +126,7 @@
                 <h1 class="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.1]">Your Base <span class="gradient-text">Assets & Portfolio</span></h1>
                 <p class="muted text-sm md:text-base leading-relaxed">Connect your wallet to inspect every token, coin, and NFT in your custody across the Base network — then trade them peer-to-peer with zero fees.</p>
                 <div id="scannerAction" class="pt-3">
-                    <button onclick="connectWallet()" class="btn-primary text-white font-semibold px-9 py-3.5 rounded-xl text-sm">Connect Wallet to Scan Assets</button>
+                    <button onclick="openWalletPicker()" class="btn-primary text-white font-semibold px-9 py-3.5 rounded-xl text-sm">Connect Wallet to Scan Assets</button>
                 </div>
             </div>
 
@@ -216,6 +216,19 @@
         </div>
     </main>
 
+    <!-- Wallet picker modal (custom, works on mobile & desktop) -->
+    <div id="walletPicker" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[60] hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="glass-bordered rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-md relative max-h-[85vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-lg font-bold">Connect a wallet</h3>
+                <button onclick="closeWalletPicker()" class="w-9 h-9 rounded-full glass flex items-center justify-center text-muted hover:text-white text-lg">&times;</button>
+            </div>
+            <p class="text-xs muted mb-5">Choose how you want to connect. Installed wallets are detected automatically.</p>
+            <div class="space-y-2.5" id="walletList"></div>
+            <button onclick="closeWalletPicker()" class="w-full mt-4 py-3 rounded-xl glass text-sm font-semibold muted hover:text-white transition-all">Cancel</button>
+        </div>
+    </div>
+
     <footer class="border-t glass py-7 text-center text-xs muted">
         <p>BarterBase Protocol (<span class="font-mono">0xb323...fc4B</span>) • Built on Base • Zero Fees</p>
     </footer>
@@ -273,51 +286,83 @@
 
         function disconnectWallet() {
             provider = signer = userAddress = null;
-            document.getElementById('walletWrap').innerHTML = `<button id="connectBtn" onclick="connectWallet()" class="btn-primary text-white font-semibold px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[13px] sm:text-sm">Connect</button>`;
+            document.getElementById('walletWrap').innerHTML = `<button id="connectBtn" onclick="openWalletPicker()" class="btn-primary text-white font-semibold px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[13px] sm:text-sm">Connect</button>`;
             document.getElementById('assetDashboard').classList.add('hidden');
-            document.getElementById('scannerAction').innerHTML = `<button onclick="connectWallet()" class="btn-primary text-white font-semibold px-9 py-3.5 rounded-xl text-sm">Connect Wallet to Scan Assets</button>`;
+            document.getElementById('scannerAction').innerHTML = `<button onclick="openWalletPicker()" class="btn-primary text-white font-semibold px-9 py-3.5 rounded-xl text-sm">Connect Wallet to Scan Assets</button>`;
         }
 
         const WC_PROJECT_ID = "c7b79c5fd466f0d602ab30c182442d0b";
 
-        let web3Modal;
-        function getWeb3Modal() {
-            if (web3Modal) return web3Modal;
-            web3Modal = new Web3Modal({
-                cacheProvider: false,
-                theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
-                providerOptions: {
-                    walletconnect: {
-                        display: { name: "WalletConnect", description: "Scan with any mobile wallet" },
-                        package: EthereumProvider,
-                        options: {
-                            projectId: WC_PROJECT_ID,
-                            chains: [8453, 1, 137, 10, 42161],
-                            methods: ["eth_sendTransaction", "personal_sign"],
-                            showQrModal: true,
-                        }
-                    }
-                }
-            });
-            return web3Modal;
+        // ---- Custom wallet picker (mobile + desktop) ----
+        function detectInstalled() {
+            const e = window.ethereum || {};
+            return {
+                metamask: !!(e.isMetaMask || e.providers?.some(p => p.isMetaMask)),
+                coinbase: !!(e.isCoinbaseWallet || e.providers?.some(p => p.isCoinbaseWallet) || window.coinbaseWalletExtension),
+                farcaster: !!(e.isFrame || e.isFarcaster || e.providers?.some(p => p.isFrame || p.isFarcaster)),
+            };
         }
 
-        async function connectWallet() {
+        function openWalletPicker() {
+            const inst = detectInstalled();
+            const list = document.getElementById('walletList');
+            const items = [];
+            if (inst.metamask) items.push(['MetaMask', '🦊', 'Installed', 'injected']);
+            if (inst.coinbase) items.push(['Coinbase Wallet', '🔵', 'Installed', 'injected']);
+            if (inst.farcaster) items.push(['Farcaster / Frame', '🟣', 'Installed', 'injected']);
+            // Injected fallback (any other browser wallet)
+            items.push(['Browser Wallet', '🌐', inst.metamask||inst.coinbase||inst.farcaster ? '' : 'Installed', 'injected']);
+            // WalletConnect always last
+            items.push(['WalletConnect', '🔗', 'QR / Mobile', 'wc']);
+
+            list.innerHTML = items.map(([name, icon, tag, kind]) => `
+                <button onclick="${kind==='wc' ? 'connectWC()' : 'connectInjected()'}" class="w-full flex items-center justify-between p-4 rounded-2xl glass border border-[var(--border)] hover:bg-white/10 transition-all text-left">
+                    <span class="flex items-center space-x-3">
+                        <span class="text-2xl">${icon}</span>
+                        <span class="font-semibold">${name}</span>
+                    </span>
+                    ${tag ? `<span class="text-[10px] font-mono px-2 py-0.5 rounded-md ${tag==='Installed' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-blue-500/15 text-baseBlue'}">${tag}</span>` : ''}
+                </button>`).join('');
+            document.getElementById('walletPicker').classList.remove('hidden');
+        }
+        function closeWalletPicker() { document.getElementById('walletPicker').classList.add('hidden'); }
+
+        async function connectInjected() {
+            closeWalletPicker();
+            if (!window.ethereum) { alert("No browser wallet detected. Use WalletConnect instead."); return; }
             try {
-                const modal = getWeb3Modal();
-                const instance = await modal.connect(); // opens the "choose wallet" sheet with Installed tags
-                provider = new ethers.providers.Web3Provider(instance);
-                // subscribe to accounts/chain changes & disconnect
-                instance.on("accountsChanged", (accts) => { if (!accts.length) disconnectWallet(); else connectFromInstance(instance); });
-                instance.on("disconnect", () => disconnectWallet());
-                await connectFromInstance(instance);
+                const inst = window.ethereum;
+                provider = new ethers.providers.Web3Provider(inst);
+                await inst.request({ method: 'eth_requestAccounts' });
+                inst.on && inst.on('accountsChanged', (a) => { if (!a.length) disconnectWallet(); });
+                inst.on && inst.on('disconnect', () => disconnectWallet());
+                await connectFromInstance(inst);
+            } catch (err) { console.error(err); if (err.code !== 4001) alert("Connection failed: " + (err.message||err)); }
+        }
+
+        let wcProvider;
+        async function connectWC() {
+            closeWalletPicker();
+            try {
+                if (!wcProvider) {
+                    wcProvider = await EthereumProvider.init({
+                        projectId: WC_PROJECT_ID,
+                        chains: [8453, 1, 137, 10, 42161],
+                        methods: ['eth_sendTransaction', 'personal_sign'],
+                        showQrModal: true,
+                    });
+                }
+                await wcProvider.enable();
+                provider = new ethers.providers.Web3Provider(wcProvider);
+                wcProvider.on('disconnect', () => disconnectWallet());
+                wcProvider.on('accountsChanged', (a) => { if (!a.length) disconnectWallet(); });
+                await connectFromInstance(wcProvider);
             } catch (err) {
                 console.error(err);
-                if (err.code !== 4001) alert("Wallet connection failed: " + (err.message || err));
+                if (err.code !== 4001) alert("WalletConnect failed: " + (err.message || err));
             }
         }
 
-        let currentInstance;
         async function connectFromInstance(instance) {
             currentInstance = instance;
             provider = new ethers.providers.Web3Provider(instance);
@@ -326,6 +371,7 @@
             finishConnect();
         }
 
+        let currentInstance;
         function finishConnect() {
             renderWalletConnected();
             document.getElementById('assetDashboard').classList.remove('hidden');
@@ -335,11 +381,11 @@
 
         function disconnectWallet() {
             if (currentInstance && currentInstance.close) { try { currentInstance.close(); } catch(e){} }
-            if (web3Modal && web3Modal.clearCachedProvider) web3Modal.clearCachedProvider();
+            if (wcProvider && wcProvider.disconnect) { try { wcProvider.disconnect(); } catch(e){} }
             provider = signer = userAddress = currentInstance = null;
-            document.getElementById('walletWrap').innerHTML = `<button id="connectBtn" onclick="connectWallet()" class="btn-primary text-white font-semibold px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[13px] sm:text-sm">Connect</button>`;
+            document.getElementById('walletWrap').innerHTML = `<button id="connectBtn" onclick="openWalletPicker()" class="btn-primary text-white font-semibold px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[13px] sm:text-sm">Connect</button>`;
             document.getElementById('assetDashboard').classList.add('hidden');
-            document.getElementById('scannerAction').innerHTML = `<button onclick="connectWallet()" class="btn-primary text-white font-semibold px-9 py-3.5 rounded-xl text-sm">Connect Wallet to Scan Assets</button>`;
+            document.getElementById('scannerAction').innerHTML = `<button onclick="openWalletPicker()" class="btn-primary text-white font-semibold px-9 py-3.5 rounded-xl text-sm">Connect Wallet to Scan Assets</button>`;
         }
 
         async function loadAllAssets() {
