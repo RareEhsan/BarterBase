@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <script src="https://unpkg.com/@walletconnect/ethereum-provider@2.11.2/dist/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/web3modal@1.9.12/dist/index.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -284,22 +283,17 @@
                 </div>`;
         }
 
-        function disconnectWallet() {
-            provider = signer = userAddress = null;
-            document.getElementById('walletWrap').innerHTML = `<button id="connectBtn" onclick="openWalletPicker()" class="btn-primary text-white font-semibold px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[13px] sm:text-sm">Connect</button>`;
-            document.getElementById('assetDashboard').classList.add('hidden');
-            document.getElementById('scannerAction').innerHTML = `<button onclick="openWalletPicker()" class="btn-primary text-white font-semibold px-9 py-3.5 rounded-xl text-sm">Connect Wallet to Scan Assets</button>`;
-        }
-
         const WC_PROJECT_ID = "c7b79c5fd466f0d602ab30c182442d0b";
 
         // ---- Custom wallet picker (mobile + desktop) ----
         function detectInstalled() {
             const e = window.ethereum || {};
+            const providers = e.providers || [];
             return {
-                metamask: !!(e.isMetaMask || e.providers?.some(p => p.isMetaMask)),
-                coinbase: !!(e.isCoinbaseWallet || e.providers?.some(p => p.isCoinbaseWallet) || window.coinbaseWalletExtension),
-                farcaster: !!(e.isFrame || e.isFarcaster || e.providers?.some(p => p.isFrame || p.isFarcaster)),
+                metamask: !!(e.isMetaMask || providers.some(p => p.isMetaMask)),
+                coinbase: !!(e.isCoinbaseWallet || providers.some(p => p.isCoinbaseWallet) || window.coinbaseWalletExtension),
+                farcaster: !!(e.isFrame || e.isFarcaster || providers.some(p => p.isFrame || p.isFarcaster)),
+                any: !!(e && (e.request || providers.length)),
             };
         }
 
@@ -310,9 +304,11 @@
             if (inst.metamask) items.push(['MetaMask', '🦊', 'Installed', 'injected']);
             if (inst.coinbase) items.push(['Coinbase Wallet', '🔵', 'Installed', 'injected']);
             if (inst.farcaster) items.push(['Farcaster / Frame', '🟣', 'Installed', 'injected']);
-            // Injected fallback (any other browser wallet)
-            items.push(['Browser Wallet', '🌐', inst.metamask||inst.coinbase||inst.farcaster ? '' : 'Installed', 'injected']);
-            // WalletConnect always last
+            // Generic injected wallet (only if something is there but not a known one)
+            if (inst.any && !inst.metamask && !inst.coinbase && !inst.farcaster) {
+                items.push(['Browser Wallet', '🌐', 'Installed', 'injected']);
+            }
+            // WalletConnect always present (works with QR / mobile even if nothing installed)
             items.push(['WalletConnect', '🔗', 'QR / Mobile', 'wc']);
 
             list.innerHTML = items.map(([name, icon, tag, kind]) => `
@@ -343,6 +339,10 @@
         let wcProvider;
         async function connectWC() {
             closeWalletPicker();
+            if (typeof EthereumProvider === 'undefined') {
+                alert("WalletConnect failed to load. Please refresh the page or use an installed browser wallet.");
+                return;
+            }
             try {
                 if (!wcProvider) {
                     wcProvider = await EthereumProvider.init({
