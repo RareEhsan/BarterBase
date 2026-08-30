@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BarterBase — Trustless P2P Trading on Base</title>
+  <meta name="description" content="Lock assets, swap peer-to-peer, zero fees. A self-custody escrow interface on Base.">
+  <meta name="theme-color" content="#06080d">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #06080d; --bg2: #0a0e17; --card: rgba(14,18,28,0.72);
+      --card-solid: #0e121c; --border: rgba(255,255,255,0.07);
+      --border-glow: rgba(0,82,255,0.25); --text: #e8ecf4; --muted: #7a849b;
+      --blue: #0052ff; --blue-hover: #0a62ff; --green: #00d68f; --red: #ff4d6a;
+      --font: 'DM Sans', system-ui, -apple-system, sans-serif;
+      --mono: 'DM Mono', 'SF Mono', 'Fira Code', monospace;
+      --radius: 16px; --radius-sm: 10px; --radius-xs: 7px;
+    }
+    html:not(.dark) {
+      --bg: #f2f5fa; --bg2: #e8ecf4; --card: rgba(255,255,255,0.82);
+      --card-solid: #ffffff; --border: rgba(0,0,0,0.08);
+      --border-glow: rgba(0,82,255,0.18); --text: #0c1021; --muted: #6b7280;
+    }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.55; min-height: 100dvh; display: flex; flex-direction: column; }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+    input { font-family: var(--mono); }
+    ::selection { background: var(--blue); color: #fff; }
+
+    /* Grid glow */
+    .grid-glow { position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: linear-gradient(rgba(0,82,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,82,255,0.03) 1px,transparent 1px);
+      background-size: 64px 64px; }
+    .grid-glow::after { content:''; position:absolute; inset:0;
+      background: radial-gradient(ellipse 70% 50% at 50% 0%,rgba(0,82,255,0.12) 0%,transparent 70%); }
+
+    /* Sky comet */
+    .sky-comet span { position:fixed; width:180px; height:2px; border-radius:2px; pointer-events:none; z-index:0; opacity:0; }
+    .sky-comet span:nth-child(1) { top:12%; left:-200px; background:linear-gradient(90deg,transparent,rgba(0,82,255,0.5),transparent); animation:comet 8s 1s linear infinite; }
+    .sky-comet span:nth-child(2) { top:38%; left:-200px; background:linear-gradient(90deg,transparent,rgba(0,180,255,0.4),transparent); animation:comet 10s 4s linear infinite; }
+    @keyframes comet { 0%{opacity:0;transform:translateX(0)} 5%{opacity:1} 70%{opacity:1} 100%{opacity:0;transform:translateX(calc(100vw + 250px))} }
+
+    .container { width:100%; max-width:1080px; margin:0 auto; padding:0 20px; position:relative; z-index:1; }
+
+    /* ── Nav ── */
+    .nav { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:50; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); background:color-mix(in srgb, var(--bg) 82%, transparent); }
+    .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; letter-spacing:-0.3px; flex-shrink:0; }
+    .brand-mark { width:30px; height:30px; border-radius:9px; background:var(--blue); display:flex; align-items:center; justify-content:center; box-shadow:0 2px 12px rgba(0,82,255,0.35); }
+    .brand-mark svg { width:16px; height:16px; }
+    .nav-right { display:flex; align-items:center; gap:8px; }
+    .network-pill { display:flex; align-items:center; gap:6px; font-size:11px; font-family:var(--mono); font-weight:500; padding:5px 12px; border-radius:20px; border:1px solid var(--border); background:var(--card); color:var(--muted); }
+    .network-pill i { width:7px; height:7px; border-radius:50%; background:var(--green); display:inline-block; animation:pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .theme-toggle { font-size:12px; padding:6px 12px; border-radius:20px; border:1px solid var(--border); background:var(--card); color:var(--muted); transition:all 0.2s; }
+    .theme-toggle:hover { color:var(--text); border-color:var(--border-glow); }
+    .nav-connect { font-size:13px; font-weight:600; padding:8px 18px; border-radius:12px; background:var(--blue); color:#fff; transition:all 0.2s; box-shadow:0 4px 16px rgba(0,82,255,0.3); white-space:nowrap; }
+    .nav-connect:hover { background:var(--blue-hover); transform:translateY(-1px); box-shadow:0 6px 24px rgba(0,82,255,0.4); }
+    .nav-address { display:flex; align-items:center; gap:6px; font-size:12px; font-family:var(--mono); font-weight:500; padding:5px 10px 5px 5px; border-radius:20px; border:1px solid var(--border); background:var(--card); white-space:nowrap; }
+    .nav-address .dot { width:24px; height:24px; border-radius:50%; background:var(--blue); display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:#fff; }
+    .nav-disconnect { font-size:11px; font-weight:600; padding:6px 12px; border-radius:20px; border:1px solid rgba(255,77,106,0.3); color:var(--red); transition:all 0.2s; white-space:nowrap; }
+    .nav-disconnect:hover { background:rgba(255,77,106,0.1); border-color:var(--red); }
+    .eyebrow { font-size:11px; font-family:var(--mono); font-weight:500; letter-spacing:0.12em; color:var(--blue); text-transform:uppercase; margin-bottom:8px; }
+
+    /* ── Hero ── */
+    .hero { text-align:center; padding:70px 0 50px; position:relative; }
+    .hero h1 { font-size:clamp(30px,5vw,52px); font-weight:700; line-height:1.1; letter-spacing:-0.03em; margin-top:14px; }
+    .hero h1 em { font-style:normal; color:var(--blue); position:relative; }
+    .hero h1 em::after { content:''; position:absolute; bottom:-2px; left:0; right:0; height:3px; background:var(--blue); border-radius:2px; transform:scaleX(0); animation:underline-in 0.8s 0.6s ease forwards; }
+    @keyframes underline-in { to { transform:scaleX(1); } }
+    .hero-sub { color:var(--muted); font-size:15px; max-width:460px; margin:18px auto 0; animation:fadeUp 0.6s 0.3s both; }
+    .hero-security { display:inline-flex; align-items:center; gap:6px; margin-top:14px; font-size:12px; color:var(--green); font-family:var(--mono); padding:6px 16px; border-radius:20px; border:1px solid rgba(0,214,143,0.2); background:rgba(0,214,143,0.06); animation:fadeUp 0.6s 0.5s both; }
+    .hero-cta { margin-top:28px; animation:fadeUp 0.6s 0.4s both; }
+    .hero-cta .nav-connect { padding:12px 36px; font-size:14px; border-radius:14px; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── Workspace ── */
+    .workspace { padding:0 0 80px; }
+    .workspace-head { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:8px; }
+    .workspace-head h2 { font-size:20px; font-weight:700; letter-spacing:-0.2px; }
+    .wallet-status { font-size:11px; font-family:var(--mono); color:var(--muted); padding:4px 12px; border-radius:8px; border:1px solid var(--border); background:var(--card); }
+    .workspace-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    @media(max-width:768px){ .workspace-grid{grid-template-columns:1fr} }
+    .panel { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+    .panel-title { font-size:14px; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .panel-title .dot { width:8px; height:8px; border-radius:50%; background:var(--blue); }
+    .form-group { margin-bottom:14px; }
+    .form-group label { display:block; font-size:11px; font-family:var(--mono); font-weight:500; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px; }
+    .form-group input { width:100%; padding:12px 14px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:14px; outline:none; transition:border-color 0.2s,box-shadow 0.2s; }
+    .form-group input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(0,82,255,0.15); }
+    .form-group input::placeholder { color:var(--muted); opacity:0.6; }
+    .submit-btn { width:100%; padding:13px; border-radius:var(--radius-sm); background:var(--blue); color:#fff; font-size:14px; font-weight:600; border:none; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 16px rgba(0,82,255,0.3); margin-top:6px; }
+    .submit-btn:hover { background:var(--blue-hover); transform:translateY(-1px); }
+    .escrow-list { display:flex; flex-direction:column; gap:12px; max-height:420px; overflow-y:auto; }
+    .escrow-card { border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; background:var(--bg); transition:border-color 0.2s; }
+    .escrow-card:hover { border-color:var(--border-glow); }
+    .escrow-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .escrow-id { font-size:11px; font-family:var(--mono); color:var(--muted); }
+    .escrow-badge { font-size:10px; font-family:var(--mono); font-weight:600; padding:3px 10px; border-radius:6px; }
+    .badge-active { background:rgba(0,214,143,0.12); color:var(--green); }
+    .escrow-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+    .escrow-col .label { font-size:10px; font-family:var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:2px; }
+    .escrow-col .value { font-size:15px; font-weight:700; }
+    .escrow-col .chain { font-size:10px; color:var(--muted); font-family:var(--mono); margin-top:1px; }
+    .escrow-col + .escrow-col { border-left:1px solid var(--border); padding-left:12px; }
+    .escrow-foot { display:flex; justify-content:space-between; align-items:center; }
+    .escrow-fee { font-size:11px; font-family:var(--mono); color:var(--muted); }
+    .escrow-fee b { color:var(--green); }
+    .accept-btn { font-size:12px; font-weight:600; padding:8px 18px; border-radius:var(--radius-xs); background:var(--blue); color:#fff; transition:all 0.2s; }
+    .accept-btn:hover { background:var(--blue-hover); }
+    .empty-state { text-align:center; padding:40px 16px; color:var(--muted); font-size:13px; }
+    .empty-state span { font-size:24px; display:block; margin-bottom:8px; }
+
+    /* ── Docs ── */
+    .docs { padding:60px 0 80px; }
+    .docs-intro { margin-bottom:36px; }
+    .docs-intro h2 { font-size:22px; font-weight:700; letter-spacing:-0.2px; }
+    .docs-intro p { color:var(--muted); font-size:14px; max-width:520px; margin-top:8px; }
+    .docs-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+    @media(max-width:768px){ .docs-grid{grid-template-columns:1fr} }
+    .doc-card { border:1px solid var(--border); border-radius:var(--radius-sm); padding:20px; background:var(--card); transition:border-color 0.2s; }
+    .doc-card:hover { border-color:var(--border-glow); }
+    .doc-card span { font-size:20px; font-weight:700; color:var(--blue); display:block; margin-bottom:8px; font-family:var(--mono); }
+    .doc-card h3 { font-size:14px; font-weight:700; margin-bottom:6px; }
+    .doc-card p { font-size:12px; color:var(--muted); line-height:1.6; }
+    footer { border-top:1px solid var(--border); padding:20px 0; text-align:center; font-size:11px; color:var(--muted); font-family:var(--mono); position:relative; z-index:1; }
+
+    /* ── Dialog (BaseClean pattern) ── */
+    dialog { border:none; border-radius:var(--radius); padding:0; background:var(--card-solid); color:var(--text); max-width:420px; width:calc(100% - 32px); box-shadow:0 24px 80px rgba(0,0,0,0.5); }
+    dialog::backdrop { background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+    .dialog-inner { padding:28px; }
+    .dialog-close { position:absolute; top:16px; right:16px; width:32px; height:32px; border-radius:50%; border:1px solid var(--border); background:var(--card); color:var(--muted); font-size:18px; display:flex; align-items:center; justify-content:center; transition:all 0.2s; z-index:2; }
+    .dialog-close:hover { color:var(--text); border-color:var(--border-glow); }
+    .wallet-copy { color:var(--muted); font-size:13px; margin-bottom:20px; line-height:1.5; }
+    .wallet-choice-list { display:flex; flex-direction:column; gap:4px; }
+    .wallet-choice { display:flex; align-items:center; gap:12px; width:100%; padding:12px 14px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg); text-align:left; transition:all 0.15s; }
+    .wallet-choice:hover { border-color:var(--border-glow); background:color-mix(in srgb, var(--blue) 5%, var(--bg)); }
+    .wallet-choice-mark { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:var(--card); border:1px solid var(--border); }
+    .wallet-choice-mark img { width:18px; height:18px; }
+    .wallet-choice span { flex:1; min-width:0; }
+    .wallet-choice strong { display:block; font-size:14px; font-weight:600; }
+    .wallet-choice small { display:block; font-size:11px; color:var(--muted); margin-top:1px; font-family:var(--mono); }
+    .wallet-choice b { font-size:16px; color:var(--muted); font-weight:400; transition:color 0.15s; }
+    .wallet-choice:hover b { color:var(--blue); }
+    .wallet-status-tag { display:inline-block; font-size:9px; font-family:var(--mono); font-weight:600; padding:1px 6px; border-radius:4px; margin-left:4px; background:rgba(0,214,143,0.12); color:var(--green); }
+    .wallet-dialog-status { margin-top:14px; font-size:12px; color:var(--muted); text-align:center; min-height:18px; }
+    @media(max-width:480px){ .hero{padding:50px 0 30px} .hero h1{font-size:26px} .network-pill{display:none} }
+  </style>
+</head>
+<body>
+  <div class="grid-glow"></div>
+  <div class="sky-comet" aria-hidden="true"><span></span><span></span></div>
+
+  <!-- Nav -->
+  <nav class="nav container">
+    <a class="brand" href="#">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13l-3-3"/><path d="M20 17H7l3 3"/><path d="M17 4l3 3-3 3"/><path d="M7 20l-3-3 3-3"/></svg>
+      </div>
+      BarterBase
+    </a>
+    <div class="nav-right">
+      <span class="network-pill"><i></i> Base</span>
+      <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()" type="button">☾ Dark</button>
+      <div id="navWallet">
+        <button class="nav-connect" onclick="openWalletDialog()">Connect Wallet</button>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero container" id="heroSection">
+      <p class="eyebrow">TRUSTLESS P2P ON BASE</p>
+      <h1>Lock assets.<br><em>Swap peers.</em><br>Zero fees.</h1>
+      <p class="hero-sub">A self-custody escrow for peer-to-peer trading on Base. Your wallet signs every action — we never hold your tokens.</p>
+      <div class="hero-security">🔒 We never request your seed phrase, private key, or dangerous wallet permissions</div>
+      <div class="hero-cta">
+        <button class="nav-connect" onclick="openWalletDialog()" style="padding:12px 36px;font-size:14px;border-radius:14px">Connect Wallet</button>
+      </div>
+    </section>
+
+    <!-- Workspace (hidden until connected) -->
+    <section class="workspace container" id="workspace" style="display:none">
+      <div class="workspace-head">
+        <div><p class="eyebrow">WORKSPACE</p><h2>Swap Dashboard</h2></div>
+        <div class="wallet-status" id="walletStatus">Connected</div>
+      </div>
+      <div class="workspace-grid">
+        <div class="panel">
+          <div class="panel-title"><span class="dot"></span> Create Swap Offer</div>
+          <div class="form-group">
+            <label>Asset You Lock (Offer)</label>
+            <input type="text" id="offerInput" placeholder="e.g. 0.5 ETH">
+          </div>
+          <div class="form-group">
+            <label>Asset You Want (Receive)</label>
+            <input type="text" id="wantInput" placeholder="e.g. 1000 USDC">
+          </div>
+          <button class="submit-btn" onclick="createTrade()">Lock &amp; Create Offer</button>
+        </div>
+        <div class="panel">
+          <div class="panel-title"><span class="dot" style="background:var(--green)"></span> Live Escrows</div>
+          <div class="escrow-list" id="escrowList">
+            <div class="empty-state"><span>✦</span><p>No active escrows yet. Create one to get started.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Docs -->
+    <section class="docs container">
+      <div class="docs-intro">
+        <p class="eyebrow">HOW IT WORKS</p>
+        <h2>Everything you need, explained clearly.</h2>
+        <p>BarterBase is a self-custody escrow on Base. Your wallet signs every on-chain action. We never take custody of your tokens.</p>
+      </div>
+      <div class="docs-grid">
+        <div class="doc-card"><span>01</span><h3>Connect your wallet</h3><p>Link MetaMask, Coinbase, Rainbow, Trust, Rabby, Phantom, Base Account, or scan via WalletConnect. Your keys, your custody.</p></div>
+        <div class="doc-card"><span>02</span><h3>Create a swap offer</h3><p>Specify what you want to lock and what you want in return. The smart contract holds your tokens until a peer accepts.</p></div>
+        <div class="doc-card"><span>03</span><h3>Peer accepts the swap</h3><p>Another user reviews your offer and locks their side of the trade. Both assets are secured in the escrow contract.</p></div>
+        <div class="doc-card"><span>04</span><h3>Trustless settlement</h3><p>Once both parties confirm, the contract atomically swaps. No middleman, no counterparty risk.</p></div>
+        <div class="doc-card"><span>05</span><h3>Zero protocol fees</h3><p>0% app fee. You only pay Base network gas. All costs shown before you sign.</p></div>
+        <div class="doc-card"><span>06</span><h3>Cancel anytime</h3><p>No one accepted? Cancel and reclaim your locked assets. Full control, always.</p></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container">
+    <p>BarterBase Protocol (<span style="font-family:var(--mono)">0xb323...fc4B</span>) · Built on Base · Zero Fees</p>
+  </footer>
+
+  <!-- Wallet Dialog -->
+  <dialog id="walletDialog">
+    <div class="dialog-inner" style="position:relative">
+      <button class="dialog-close" onclick="closeWalletDialog()" aria-label="Close">×</button>
+      <p class="eyebrow">CONNECT WALLET</p>
+      <h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Choose your wallet</h2>
+      <p class="wallet-copy">Connect securely on Base. BarterBase never sees your seed phrase or private key.</p>
+      <div class="wallet-choice-list">
+        <button class="wallet-choice" onclick="handleWallet('base')">
+          <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/base/0052ff" alt=""></span>
+          <span><strong>Base Account</strong><small>Recommended in Base App</small></span><b>→</b>
+        </button>
+        <button class="wallet-choice" onclick="handleWallet('metamask')">
+          <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/metamask/e2761b" alt=""></span>
+          <span><strong>MetaMask</strong><small data-wallet-state="metamask">Browser wallet</small></span><b>→</b>
+        </button>
+        <button class="wallet-choice" onclick="handleWallet('coinbase')">
+          <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/coinbase/ffffff" alt=""></span>
+          <span><strong>Coinbase Wallet</strong><small data-wallet-state="coinbase">Browser wallet</small></span><b>→</b>
+        </button>
+        <button class="wallet-choice" onclick="handleWallet('rainbow')">
+          <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/rainbow/ffffff" alt=""></span>
+          <span><strong>Rainbow</strong><small data-wallet-state="rainbow">Browser / Mobile</small></span><b>→</b>
+        </button>
+        <button class="wallet-choice" onclick="handleWallet('trust')">
+          <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/trustwallet/3375bb" alt=""></span>
+          <span><strong>Trust Wallet</strong><small data-wallet-state="trust">Browser / Mobile</small></span><b>→</b>
+        </button>
+        <button class="wallet-choice" onclick="handleWallet('rabby')">
+          <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/ethereum/627eea" alt=""></span>
+          <span><strong>Rabby Wallet</strong><small data-wallet-state="rabby">Browser wallet</small></span><b>→</b>
+        </button>
+        <button class="wallet-choice" onclick="handleWallet('phantom')">
+          <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/phantom/ab9ff2" alt=""></span>
+          <span><strong>Phantom</strong><small data-wallet-state="phantom">Browser wallet</small></span><b>→</b>
+        </button>
+        <button class="wallet-choice" onclick="handleWallet('wc')">
+          <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/walletconnect/ffffff" alt=""></span>
+          <span><strong>WalletConnect</strong><small>Connect a mobile wallet</small></span><b>→</b>
+        </button>
+      </div>
+      <p class="wallet-dialog-status" id="walletDialogStatus"></p>
+    </div>
+  </dialog>
+
+  <!-- Ethers.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+  <script>
+    // ── Config ──
+    const CONTRACT = "0xb3238e0E5F6288377F4CA1708e43F9147704fc4B";
+    const ABI = [
+      "function createTrade(address _taker, address _tokenOffered, uint256 _amountOrIdOffered, address _tokenWanted, uint256 _amountOrIdWanted, bool _isNFT) external payable returns (uint256)",
+      "function acceptTrade(uint256 _tradeId) external payable",
+      "function cancelTrade(uint256 _tradeId) external",
+      "function tradeCounter() external view returns (uint256)"
+    ];
+    const WC_PROJECT_ID = "c7b79c5fd466f0d602ab30c182442d0b";
+    const STORAGE_KEY = "barterbase_wallet_session";
+
+    let provider, signer, userAddress, activeProvider, wcConnector;
+
+    // ── Theme ──
+    function toggleTheme() {
+      const h = document.documentElement;
+      const btn = document.getElementById('themeBtn');
+      if (h.classList.contains('dark')) { h.classList.remove('dark'); btn.textContent = '☀ Light'; }
+      else { h.classList.add('dark'); btn.textContent = '☾ Dark'; }
+    }
+
+    // ── Wallet Dialog ──
+    function openWalletDialog() {
+      detectInstalled();
+      document.getElementById('walletDialog').showModal();
+    }
+    function closeWalletDialog() { document.getElementById('walletDialog').close(); }
+    document.getElementById('walletDialog').addEventListener('click', function(e) { if (e.target === this) closeWalletDialog(); });
+
+    function detectInstalled() {
+      const eth = window.ethereum;
+      if (!eth) return;
+      const providers = eth.providers || [eth];
+      const checks = [
+        ['isMetaMask', 'metamask'],
+        ['isCoinbaseWallet', 'coinbase'],
+        ['isRabby', 'rabby'],
+        ['isBraveWallet', 'brave'],
+        ['isPhantom', 'phantom'],
+      ];
+      checks.forEach(([prop, name]) => {
+        const found = providers.some(p => p[prop]) || (name === 'metamask' && eth.isMetaMask);
+        const el = document.querySelector(`[data-wallet-state="${name}"]`);
+        if (el && found) el.innerHTML = 'Installed <span class="wallet-status-tag">detected</span>';
+      });
+    }
+
+    // ── Get specific provider ──
+    function getProvider(type) {
+      const eth = window.ethereum;
+      if (!eth) return null;
+      const providers = eth.providers || [eth];
+      if (providers.length <= 1) return eth; // only one provider, return it
+      const map = {
+        metamask: 'isMetaMask',
+        coinbase: 'isCoinbaseWallet',
+        rabby: 'isRabby',
+        phantom: 'isPhantom',
+        brave: 'isBraveWallet',
+      };
+      const prop = map[type];
+      if (prop) {
+        // IMPORTANT: find the FIRST match for this specific wallet
+        const found = providers.find(p => p[prop]);
+        if (found) return found;
+      }
+      // Fallback: return window.ethereum itself
+      return eth;
+    }
+
+    // ── Handle Wallet ──
+    function handleWallet(type) {
+      closeWalletDialog();
+
+      if (type === 'wc') { connectWalletConnect(); return; }
+      if (type === 'base') { handleWallet('metamask'); return; } // Base Account uses MetaMask/Injected
+
+      // Mobile deep-links
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        const host = window.location.host + window.location.pathname;
+        const url = encodeURIComponent(window.location.href);
+        const links = {
+          metamask: `https://metamask.app.link/dapp/${host}`,
+          coinbase: `https://go.cb-w.com/dapp?cb_url=${url}`,
+          rainbow: `https://rainbow.me/`,
+          trust: `https://link.trustwallet.com/open_url?coin_id=60&url=${url}`,
+          phantom: `https://phantom.app/ul/browse/${host}`,
+        };
+        if (links[type]) { window.location.href = links[type]; return; }
+      }
+
+      // Desktop / installed
+      const eth = getProvider(type);
+      if (!eth) { alert("Wallet not detected. Please install " + type + " or use WalletConnect."); return; }
+      connectInjected(eth, type);
+    }
+
+    async function connectInjected(eth, type) {
+      try {
+        provider = new ethers.providers.Web3Provider(eth);
+        const accounts = await eth.request({ method: 'eth_requestAccounts' });
+        signer = provider.getSigner();
+        userAddress = accounts[0] || await signer.getAddress();
+        activeProvider = eth;
+
+        // Listen for changes
+        if (eth.on) {
+          eth.on('accountsChanged', (a) => {
+            if (!a.length) { disconnectWallet(); }
+            else { userAddress = a[0]; onConnected(type); }
+          });
+          eth.on('chainChanged', () => window.location.reload());
+        }
+
+        onConnected(type);
+      } catch (e) {
+        if (e.code !== 4001) alert("Connection failed: " + (e.message || e));
+      }
+    }
+
+    async function connectWalletConnect() {
+      const statusEl = document.getElementById('walletDialogStatus');
+      statusEl.textContent = "Loading WalletConnect SDK...";
+      openWalletDialog();
+
+      try {
+        if (typeof window.EthereumProvider === 'undefined') {
+          // Wait a moment for lazy-loaded script
+          await new Promise(r => setTimeout(r, 1500));
+        }
+        if (typeof window.EthereumProvider === 'undefined') {
+          statusEl.textContent = "WalletConnect SDK failed to load. Please refresh.";
+          return;
+        }
+        statusEl.textContent = "Opening QR code...";
+        closeWalletDialog();
+
+        wcConnector = await window.EthereumProvider.init({
+          projectId: WC_PROJECT_ID,
+          chains: [8453],
+          showQrModal: true,
+        });
+        await wcConnector.enable();
+        provider = new ethers.providers.Web3Provider(wcConnector);
+        signer = provider.getSigner();
+        userAddress = await signer.getAddress();
+        activeProvider = wcConnector;
+
+        wcConnector.on('disconnect', () => disconnectWallet());
+        wcConnector.on('accountsChanged', (a) => { if (!a.length) disconnectWallet(); else { userAddress = a[0]; onConnected('wc'); } });
+
+        onConnected('wc');
+      } catch (e) {
+        if (e.code !== 4001) alert("WalletConnect failed: " + (e.message || e));
+        statusEl.textContent = "";
+      }
+    }
+
+    // ── On Connected ──
+    function onConnected(type) {
+      // Save session
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ address: userAddress, type: type, ts: Date.now() }));
+
+      const short = userAddress.substring(0, 6) + '...' + userAddress.substring(38);
+      document.getElementById('navWallet').innerHTML = `
+        <div class="nav-address">
+          <div class="dot">${userAddress.substring(2,4).toUpperCase()}</div>
+          ${short}
+        </div>
+        <button class="nav-disconnect" onclick="disconnectWallet()">Disconnect</button>`;
+
+      document.getElementById('heroSection').style.display = 'none';
+      document.getElementById('workspace').style.display = 'block';
+      loadBalance();
+    }
+
+    // ── Disconnect (real) ──
+    async function disconnectWallet() {
+      try {
+        if (activeProvider && activeProvider.request) {
+          await activeProvider.request({ method: "wallet_revokePermissions", params: [{ eth_accounts: {} }] }).catch(() => {});
+        }
+      } catch(e) {}
+
+      if (wcConnector && wcConnector.disconnect) {
+        try { await wcConnector.disconnect(); } catch(e) {}
+      }
+
+      provider = signer = userAddress = activeProvider = wcConnector = null;
+      localStorage.removeItem(STORAGE_KEY);
+
+      document.getElementById('navWallet').innerHTML = '<button class="nav-connect" onclick="openWalletDialog()">Connect Wallet</button>';
+      document.getElementById('heroSection').style.display = '';
+      document.getElementById('workspace').style.display = 'none';
+    }
+
+    // ── Auto-reconnect on page load (session persisted) ──
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return;
+      try {
+        const { address, type, ts } = JSON.parse(saved);
+        // Session valid for 7 days
+        if (Date.now() - ts > 7 * 24 * 60 * 60 * 1000) { localStorage.removeItem(STORAGE_KEY); return; }
+        // Try reconnecting silently
+        if (window.ethereum) {
+          const eth = type === 'wc' ? null : getProvider(type || 'metamask');
+          if (eth && eth.request) {
+            eth.request({ method: 'eth_accounts' }).then(accounts => {
+              if (accounts && accounts.length && accounts[0].toLowerCase() === address.toLowerCase()) {
+                provider = new ethers.providers.Web3Provider(eth);
+                signer = provider.getSigner();
+                userAddress = accounts[0];
+                activeProvider = eth;
+                if (eth.on) {
+                  eth.on('accountsChanged', (a) => { if (!a.length) disconnectWallet(); else { userAddress = a[0]; onConnected(type); } });
+                  eth.on('chainChanged', () => window.location.reload());
+                }
+                onConnected(type);
+              } else { localStorage.removeItem(STORAGE_KEY); }
+            }).catch(() => { localStorage.removeItem(STORAGE_KEY); });
+          }
+        }
+      } catch(e) { localStorage.removeItem(STORAGE_KEY); }
+    });
+
+    // ── Load Balance ──
+    async function loadBalance() {
+      if (!provider || !userAddress) return;
+      try {
+        const bal = await provider.getBalance(userAddress);
+        const eth = parseFloat(ethers.utils.formatEther(bal)).toFixed(4);
+        document.getElementById('walletStatus').textContent = `Balance: ${eth} ETH`;
+      } catch(e) { console.warn(e); }
+    }
+
+    // ── Create Trade ──
+    async function createTrade() {
+      const offer = document.getElementById('offerInput').value;
+      const want = document.getElementById('wantInput').value;
+      if (!offer || !want) { alert("Please fill in both fields."); return; }
+      if (!signer) { alert("Connect your wallet first."); return; }
+      try {
+        const c = new ethers.Contract(CONTRACT, ABI, signer);
+        const tx = await c.createTrade(
+          "0x0000000000000000000000000000000000000000",
+          ethers.constants.AddressZero, ethers.utils.parseEther("0.001"),
+          ethers.constants.AddressZero, ethers.utils.parseEther("0.001"),
+          false, { value: ethers.utils.parseEther("0.001") }
+        );
+        alert("Transaction sent! Hash: " + tx.hash);
+        await tx.wait();
+        alert("Swap offer created on Base!");
+        document.getElementById('offerInput').value = '';
+        document.getElementById('wantInput').value = '';
+        addEscrow(offer, want);
+      } catch (e) { alert("Error: " + (e.reason || e.message)); }
+    }
+
+    function addEscrow(offer, want) {
+      const list = document.getElementById('escrowList');
+      const empty = list.querySelector('.empty-state');
+      if (empty) empty.remove();
+      const id = Math.floor(Math.random() * 9000) + 1000;
+      const card = document.createElement('div');
+      card.className = 'escrow-card';
+      card.innerHTML = `
+        <div class="escrow-head"><span class="escrow-id">Escrow #${id}</span><span class="escrow-badge badge-active">Active</span></div>
+        <div class="escrow-row">
+          <div class="escrow-col"><div class="label">You Give</div><div class="value">${offer}</div><div class="chain">Base Native</div></div>
+          <div class="escrow-col"><div class="label">You Receive</div><div class="value">${want}</div><div class="chain">Base ERC-20</div></div>
+        </div>
+        <div class="escrow-foot"><div class="escrow-fee">Fee: <b>0%</b></div><button class="accept-btn" onclick="acceptTrade()">Accept Swap</button></div>`;
+      list.prepend(card);
+    }
+
+    async function acceptTrade() {
+      if (!signer) { alert("Connect your wallet first."); return; }
+      try {
+        const c = new ethers.Contract(CONTRACT, ABI, signer);
+        const tx = await c.acceptTrade(0, { value: ethers.utils.parseEther("0.001") });
+        alert("Transaction sent! Hash: " + tx.hash);
+        await tx.wait();
+        alert("Swap accepted on Base!");
+      } catch (e) { alert("Error: " + (e.reason || e.message)); }
+    }
+  </script>
+
+  <!-- WalletConnect SDK (lazy loaded, non-blocking) -->
+  <script>
+    (function() {
+      var s = document.createElement('script');
+      s.src = 'https://unpkg.com/@walletconnect/ethereum-provider@2.11.2/dist/index.umd.js';
+      s.async = true;
+      s.onerror = function() { console.warn('WalletConnect SDK failed to load'); };
+      document.head.appendChild(s);
+    })();
+  </script>
+</body>
+</html>

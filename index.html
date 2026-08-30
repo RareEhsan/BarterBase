@@ -1,584 +1,169 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BarterBase — Trustless P2P Trading on Base</title>
-  <meta name="description" content="Lock assets, swap peer-to-peer, zero fees. A self-custody escrow interface on Base.">
-  <meta name="theme-color" content="#06080d">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #06080d; --bg2: #0a0e17; --card: rgba(14,18,28,0.72);
-      --card-solid: #0e121c; --border: rgba(255,255,255,0.07);
-      --border-glow: rgba(0,82,255,0.25); --text: #e8ecf4; --muted: #7a849b;
-      --blue: #0052ff; --blue-hover: #0a62ff; --green: #00d68f; --red: #ff4d6a;
-      --font: 'DM Sans', system-ui, -apple-system, sans-serif;
-      --mono: 'DM Mono', 'SF Mono', 'Fira Code', monospace;
-      --radius: 16px; --radius-sm: 10px; --radius-xs: 7px;
-    }
-    html:not(.dark) {
-      --bg: #f2f5fa; --bg2: #e8ecf4; --card: rgba(255,255,255,0.82);
-      --card-solid: #ffffff; --border: rgba(0,0,0,0.08);
-      --border-glow: rgba(0,82,255,0.18); --text: #0c1021; --muted: #6b7280;
-    }
-    body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.55; min-height: 100dvh; display: flex; flex-direction: column; }
-    a { color: inherit; text-decoration: none; }
-    button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
-    input { font-family: var(--mono); }
-    ::selection { background: var(--blue); color: #fff; }
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BarterBase — Trade NFTs, not liquidity</title>
+<meta name="description" content="Fee-free peer-to-peer NFT swaps on Base. Trade your NFT for another NFT with an ETH sweetener when you need it.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:'DM Sans',system-ui,sans-serif;background:#070910;color:#eef2ff}body{overflow-x:hidden}button,input{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}.mono{font-family:'DM Mono',monospace}.app{min-height:100vh;background:radial-gradient(900px 500px at 50% -10%,rgba(0,82,255,.20),transparent 70%),radial-gradient(700px 500px at 100% 40%,rgba(124,58,237,.08),transparent 65%)}
+.container{max-width:1180px;margin:auto;padding:0 22px}.nav{height:72px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.07);backdrop-filter:blur(18px);position:sticky;top:0;z-index:20;background:rgba(7,9,16,.76)}.brand{display:flex;gap:10px;align-items:center;font-weight:800;letter-spacing:-.4px}.logo{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(145deg,#1769ff,#0041d6);box-shadow:0 8px 28px rgba(0,82,255,.35)}.logo svg{width:19px}.navright{display:flex;align-items:center;gap:10px}.pill{border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035);border-radius:999px;padding:8px 12px;font-size:12px;color:#9ba6bd}.pill b{color:#dbe5ff}.connect,.primary{background:#1261ff;color:white;border:0;border-radius:12px;font-weight:700;padding:11px 17px;box-shadow:0 8px 28px rgba(18,97,255,.25)}.connect:hover,.primary:hover{background:#2770ff;transform:translateY(-1px)}.ghost{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.035);color:#dbe2f4;border-radius:12px;padding:10px 14px}.hero{padding:76px 0 52px;text-align:center}.eyebrow{font-size:11px;letter-spacing:.16em;color:#7f8ca8;font-weight:700}.hero h1{font-size:clamp(45px,7vw,82px);line-height:.98;letter-spacing:-.065em;margin:18px 0}.hero h1 em{font-style:normal;background:linear-gradient(90deg,#fff,#76a7ff);-webkit-background-clip:text;background-clip:text;color:transparent}.hero p{max-width:680px;margin:0 auto;color:#98a4bb;font-size:17px;line-height:1.7}.hero-actions{display:flex;justify-content:center;gap:10px;margin-top:28px}.zero{display:inline-flex;gap:7px;align-items:center;margin-top:20px;color:#78e8bd;font-size:12px;background:rgba(0,214,143,.07);border:1px solid rgba(0,214,143,.15);padding:8px 12px;border-radius:999px}.dot{width:7px;height:7px;background:#35e6a3;border-radius:50%;box-shadow:0 0 12px #35e6a3}
+.section{padding:24px 0 64px}.sectionhead{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}.sectionhead h2{margin:4px 0 0;font-size:28px;letter-spacing:-.04em}.tabs{display:flex;gap:6px}.tab{padding:9px 13px;border-radius:10px;border:1px solid transparent;color:#8995ad;background:transparent}.tab.active{color:#fff;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.08)}.feed{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.offer-card{border:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,rgba(20,25,38,.9),rgba(11,14,23,.94));border-radius:18px;padding:12px;transition:.2s;position:relative;overflow:hidden}.offer-card:hover{transform:translateY(-3px);border-color:rgba(70,133,255,.35);box-shadow:0 20px 60px rgba(0,0,0,.25)}.artrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}.nft{aspect-ratio:1;border-radius:12px;overflow:hidden;background:#111827;position:relative}.nft img{width:100%;height:100%;object-fit:cover;display:block}.nft .tag{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.62);backdrop-filter:blur(8px);font-size:10px;padding:5px 7px;border-radius:7px}.swapline{text-align:center;margin:-9px auto -8px;position:relative;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#151c2b;border:1px solid rgba(255,255,255,.1);font-size:13px;color:#78a8ff}.meta{padding:12px 3px 3px}.meta h3{font-size:14px;margin:0 0 4px}.muted{color:#7e8aa2;font-size:11px}.deal{display:flex;justify-content:space-between;align-items:center;margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07)}.sweet{color:#9fbcff;font-size:11px}.view{font-size:11px;color:#fff;background:#155fff;padding:8px 11px;border-radius:9px;font-weight:700}.empty{padding:42px;text-align:center;border:1px dashed rgba(255,255,255,.12);border-radius:16px;color:#7e8aa2}.workspace{display:none}.workspace-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:16px}.panel{background:rgba(13,17,27,.82);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:20px}.panel h3{margin:0 0 5px;font-size:18px}.panel-sub{color:#7f8ca5;font-size:12px;margin-bottom:18px}.steps{display:flex;gap:5px;margin-bottom:18px}.step{height:4px;flex:1;background:#222b3e;border-radius:5px}.step.on{background:#1765ff}.field{margin:12px 0}.field label{display:block;color:#9aa6bd;font-size:11px;font-weight:600;margin-bottom:7px}.field input,.field select{width:100%;background:#090d16;border:1px solid rgba(255,255,255,.09);border-radius:11px;padding:12px;color:#edf2ff;outline:0}.field input:focus{border-color:#2f73ff}.nftpicker{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:280px;overflow:auto}.pick{border:1px solid rgba(255,255,255,.08);border-radius:11px;overflow:hidden;background:#0a0f19;padding:0;text-align:left}.pick.selected{border-color:#2770ff;box-shadow:0 0 0 1px #2770ff}.pick img{width:100%;aspect-ratio:1;object-fit:cover;display:block}.pick span{display:block;padding:7px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.row{display:flex;gap:8px}.row>*{flex:1}.hint{font-size:10px;color:#68748d;margin-top:6px}.offer-preview{display:grid;grid-template-columns:1fr 42px 1fr;align-items:center;gap:8px}.preview-box{background:#0a0f19;border:1px solid rgba(255,255,255,.07);border-radius:13px;padding:10px}.preview-box img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:9px}.preview-label{font-size:10px;color:#71809b;margin-bottom:6px}.walletbar{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:rgba(18,97,255,.08);border:1px solid rgba(18,97,255,.18);border-radius:12px;margin-bottom:14px}.walletbar strong{font-size:12px}.walletbar span{font-size:10px;color:#8da4d5}.dashboard-nav{display:flex;gap:7px;margin:24px 0 14px}.dashbtn{padding:9px 12px;border:1px solid rgba(255,255,255,.07);border-radius:10px;background:rgba(255,255,255,.025);color:#8490a7;font-size:11px}.dashbtn.active{color:#fff;border-color:rgba(60,125,255,.35);background:rgba(20,82,190,.12)}.my-list{display:grid;gap:9px}.my-offer{display:flex;align-items:center;justify-content:space-between;padding:10px;border:1px solid rgba(255,255,255,.07);border-radius:12px;background:#0b101a}.my-offer .left{display:flex;align-items:center;gap:10px}.thumb{width:46px;height:46px;border-radius:9px;object-fit:cover}.status{font-size:10px;color:#72e4b7}.danger{color:#ff7188;border-color:rgba(255,113,136,.2)}.toast{position:fixed;right:18px;bottom:18px;z-index:100;display:none;max-width:380px;padding:13px 15px;border:1px solid rgba(255,255,255,.1);border-radius:13px;background:#111827;box-shadow:0 20px 70px rgba(0,0,0,.45);font-size:12px}.toast.show{display:block}.toast.error{border-color:rgba(255,80,105,.3)}.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;z-index:80;padding:20px}.modal.open{display:flex}.modalbox{width:min(560px,100%);background:#0e1420;border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:20px;max-height:90vh;overflow:auto}.modalhead{display:flex;justify-content:space-between;align-items:center}.modalhead h3{margin:0}.close{font-size:20px;color:#77839a}.detail-art{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}.detail-art img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:13px}.detail-line{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px}.detail-line span{color:#78859e}.notice{padding:10px 12px;background:rgba(255,191,71,.06);border:1px solid rgba(255,191,71,.15);border-radius:11px;color:#d4b77c;font-size:10px;line-height:1.5;margin:12px 0}.docs{padding:30px 0 70px}.docsgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.doc{padding:16px;border:1px solid rgba(255,255,255,.07);border-radius:15px;background:rgba(255,255,255,.02)}.doc b{font-size:10px;color:#578bff}.doc h4{font-size:13px;margin:9px 0 5px}.doc p{font-size:11px;color:#77839b;line-height:1.6;margin:0}footer{padding:25px 0;color:#5f6a80;font-size:10px;border-top:1px solid rgba(255,255,255,.06)}@media(max-width:900px){.feed{grid-template-columns:repeat(2,1fr)}.workspace-grid,.docsgrid{grid-template-columns:1fr 1fr}}@media(max-width:650px){.nav .pill{display:none}.hero{padding:55px 0 35px}.hero-actions{flex-direction:column}.feed,.workspace-grid,.docsgrid{grid-template-columns:1fr}.sectionhead{align-items:start;gap:10px;flex-direction:column}.nftpicker{grid-template-columns:repeat(3,1fr)}}
 
-    /* Grid glow */
-    .grid-glow { position: fixed; inset: 0; pointer-events: none; z-index: 0;
-      background-image: linear-gradient(rgba(0,82,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,82,255,0.03) 1px,transparent 1px);
-      background-size: 64px 64px; }
-    .grid-glow::after { content:''; position:absolute; inset:0;
-      background: radial-gradient(ellipse 70% 50% at 50% 0%,rgba(0,82,255,0.12) 0%,transparent 70%); }
-
-    /* Sky comet */
-    .sky-comet span { position:fixed; width:180px; height:2px; border-radius:2px; pointer-events:none; z-index:0; opacity:0; }
-    .sky-comet span:nth-child(1) { top:12%; left:-200px; background:linear-gradient(90deg,transparent,rgba(0,82,255,0.5),transparent); animation:comet 8s 1s linear infinite; }
-    .sky-comet span:nth-child(2) { top:38%; left:-200px; background:linear-gradient(90deg,transparent,rgba(0,180,255,0.4),transparent); animation:comet 10s 4s linear infinite; }
-    @keyframes comet { 0%{opacity:0;transform:translateX(0)} 5%{opacity:1} 70%{opacity:1} 100%{opacity:0;transform:translateX(calc(100vw + 250px))} }
-
-    .container { width:100%; max-width:1080px; margin:0 auto; padding:0 20px; position:relative; z-index:1; }
-
-    /* ── Nav ── */
-    .nav { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:50; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); background:color-mix(in srgb, var(--bg) 82%, transparent); }
-    .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; letter-spacing:-0.3px; flex-shrink:0; }
-    .brand-mark { width:30px; height:30px; border-radius:9px; background:var(--blue); display:flex; align-items:center; justify-content:center; box-shadow:0 2px 12px rgba(0,82,255,0.35); }
-    .brand-mark svg { width:16px; height:16px; }
-    .nav-right { display:flex; align-items:center; gap:8px; }
-    .network-pill { display:flex; align-items:center; gap:6px; font-size:11px; font-family:var(--mono); font-weight:500; padding:5px 12px; border-radius:20px; border:1px solid var(--border); background:var(--card); color:var(--muted); }
-    .network-pill i { width:7px; height:7px; border-radius:50%; background:var(--green); display:inline-block; animation:pulse 2s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-    .theme-toggle { font-size:12px; padding:6px 12px; border-radius:20px; border:1px solid var(--border); background:var(--card); color:var(--muted); transition:all 0.2s; }
-    .theme-toggle:hover { color:var(--text); border-color:var(--border-glow); }
-    .nav-connect { font-size:13px; font-weight:600; padding:8px 18px; border-radius:12px; background:var(--blue); color:#fff; transition:all 0.2s; box-shadow:0 4px 16px rgba(0,82,255,0.3); white-space:nowrap; }
-    .nav-connect:hover { background:var(--blue-hover); transform:translateY(-1px); box-shadow:0 6px 24px rgba(0,82,255,0.4); }
-    .nav-address { display:flex; align-items:center; gap:6px; font-size:12px; font-family:var(--mono); font-weight:500; padding:5px 10px 5px 5px; border-radius:20px; border:1px solid var(--border); background:var(--card); white-space:nowrap; }
-    .nav-address .dot { width:24px; height:24px; border-radius:50%; background:var(--blue); display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:#fff; }
-    .nav-disconnect { font-size:11px; font-weight:600; padding:6px 12px; border-radius:20px; border:1px solid rgba(255,77,106,0.3); color:var(--red); transition:all 0.2s; white-space:nowrap; }
-    .nav-disconnect:hover { background:rgba(255,77,106,0.1); border-color:var(--red); }
-    .eyebrow { font-size:11px; font-family:var(--mono); font-weight:500; letter-spacing:0.12em; color:var(--blue); text-transform:uppercase; margin-bottom:8px; }
-
-    /* ── Hero ── */
-    .hero { text-align:center; padding:70px 0 50px; position:relative; }
-    .hero h1 { font-size:clamp(30px,5vw,52px); font-weight:700; line-height:1.1; letter-spacing:-0.03em; margin-top:14px; }
-    .hero h1 em { font-style:normal; color:var(--blue); position:relative; }
-    .hero h1 em::after { content:''; position:absolute; bottom:-2px; left:0; right:0; height:3px; background:var(--blue); border-radius:2px; transform:scaleX(0); animation:underline-in 0.8s 0.6s ease forwards; }
-    @keyframes underline-in { to { transform:scaleX(1); } }
-    .hero-sub { color:var(--muted); font-size:15px; max-width:460px; margin:18px auto 0; animation:fadeUp 0.6s 0.3s both; }
-    .hero-security { display:inline-flex; align-items:center; gap:6px; margin-top:14px; font-size:12px; color:var(--green); font-family:var(--mono); padding:6px 16px; border-radius:20px; border:1px solid rgba(0,214,143,0.2); background:rgba(0,214,143,0.06); animation:fadeUp 0.6s 0.5s both; }
-    .hero-cta { margin-top:28px; animation:fadeUp 0.6s 0.4s both; }
-    .hero-cta .nav-connect { padding:12px 36px; font-size:14px; border-radius:14px; }
-    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-
-    /* ── Workspace ── */
-    .workspace { padding:0 0 80px; }
-    .workspace-head { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:8px; }
-    .workspace-head h2 { font-size:20px; font-weight:700; letter-spacing:-0.2px; }
-    .wallet-status { font-size:11px; font-family:var(--mono); color:var(--muted); padding:4px 12px; border-radius:8px; border:1px solid var(--border); background:var(--card); }
-    .workspace-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-    @media(max-width:768px){ .workspace-grid{grid-template-columns:1fr} }
-    .panel { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
-    .panel-title { font-size:14px; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
-    .panel-title .dot { width:8px; height:8px; border-radius:50%; background:var(--blue); }
-    .form-group { margin-bottom:14px; }
-    .form-group label { display:block; font-size:11px; font-family:var(--mono); font-weight:500; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px; }
-    .form-group input { width:100%; padding:12px 14px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:14px; outline:none; transition:border-color 0.2s,box-shadow 0.2s; }
-    .form-group input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(0,82,255,0.15); }
-    .form-group input::placeholder { color:var(--muted); opacity:0.6; }
-    .submit-btn { width:100%; padding:13px; border-radius:var(--radius-sm); background:var(--blue); color:#fff; font-size:14px; font-weight:600; border:none; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 16px rgba(0,82,255,0.3); margin-top:6px; }
-    .submit-btn:hover { background:var(--blue-hover); transform:translateY(-1px); }
-    .escrow-list { display:flex; flex-direction:column; gap:12px; max-height:420px; overflow-y:auto; }
-    .escrow-card { border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; background:var(--bg); transition:border-color 0.2s; }
-    .escrow-card:hover { border-color:var(--border-glow); }
-    .escrow-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
-    .escrow-id { font-size:11px; font-family:var(--mono); color:var(--muted); }
-    .escrow-badge { font-size:10px; font-family:var(--mono); font-weight:600; padding:3px 10px; border-radius:6px; }
-    .badge-active { background:rgba(0,214,143,0.12); color:var(--green); }
-    .escrow-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
-    .escrow-col .label { font-size:10px; font-family:var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:2px; }
-    .escrow-col .value { font-size:15px; font-weight:700; }
-    .escrow-col .chain { font-size:10px; color:var(--muted); font-family:var(--mono); margin-top:1px; }
-    .escrow-col + .escrow-col { border-left:1px solid var(--border); padding-left:12px; }
-    .escrow-foot { display:flex; justify-content:space-between; align-items:center; }
-    .escrow-fee { font-size:11px; font-family:var(--mono); color:var(--muted); }
-    .escrow-fee b { color:var(--green); }
-    .accept-btn { font-size:12px; font-weight:600; padding:8px 18px; border-radius:var(--radius-xs); background:var(--blue); color:#fff; transition:all 0.2s; }
-    .accept-btn:hover { background:var(--blue-hover); }
-    .empty-state { text-align:center; padding:40px 16px; color:var(--muted); font-size:13px; }
-    .empty-state span { font-size:24px; display:block; margin-bottom:8px; }
-
-    /* ── Docs ── */
-    .docs { padding:60px 0 80px; }
-    .docs-intro { margin-bottom:36px; }
-    .docs-intro h2 { font-size:22px; font-weight:700; letter-spacing:-0.2px; }
-    .docs-intro p { color:var(--muted); font-size:14px; max-width:520px; margin-top:8px; }
-    .docs-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-    @media(max-width:768px){ .docs-grid{grid-template-columns:1fr} }
-    .doc-card { border:1px solid var(--border); border-radius:var(--radius-sm); padding:20px; background:var(--card); transition:border-color 0.2s; }
-    .doc-card:hover { border-color:var(--border-glow); }
-    .doc-card span { font-size:20px; font-weight:700; color:var(--blue); display:block; margin-bottom:8px; font-family:var(--mono); }
-    .doc-card h3 { font-size:14px; font-weight:700; margin-bottom:6px; }
-    .doc-card p { font-size:12px; color:var(--muted); line-height:1.6; }
-    footer { border-top:1px solid var(--border); padding:20px 0; text-align:center; font-size:11px; color:var(--muted); font-family:var(--mono); position:relative; z-index:1; }
-
-    /* ── Dialog (BaseClean pattern) ── */
-    dialog { border:none; border-radius:var(--radius); padding:0; background:var(--card-solid); color:var(--text); max-width:420px; width:calc(100% - 32px); box-shadow:0 24px 80px rgba(0,0,0,0.5); }
-    dialog::backdrop { background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
-    .dialog-inner { padding:28px; }
-    .dialog-close { position:absolute; top:16px; right:16px; width:32px; height:32px; border-radius:50%; border:1px solid var(--border); background:var(--card); color:var(--muted); font-size:18px; display:flex; align-items:center; justify-content:center; transition:all 0.2s; z-index:2; }
-    .dialog-close:hover { color:var(--text); border-color:var(--border-glow); }
-    .wallet-copy { color:var(--muted); font-size:13px; margin-bottom:20px; line-height:1.5; }
-    .wallet-choice-list { display:flex; flex-direction:column; gap:4px; }
-    .wallet-choice { display:flex; align-items:center; gap:12px; width:100%; padding:12px 14px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg); text-align:left; transition:all 0.15s; }
-    .wallet-choice:hover { border-color:var(--border-glow); background:color-mix(in srgb, var(--blue) 5%, var(--bg)); }
-    .wallet-choice-mark { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:var(--card); border:1px solid var(--border); }
-    .wallet-choice-mark img { width:18px; height:18px; }
-    .wallet-choice span { flex:1; min-width:0; }
-    .wallet-choice strong { display:block; font-size:14px; font-weight:600; }
-    .wallet-choice small { display:block; font-size:11px; color:var(--muted); margin-top:1px; font-family:var(--mono); }
-    .wallet-choice b { font-size:16px; color:var(--muted); font-weight:400; transition:color 0.15s; }
-    .wallet-choice:hover b { color:var(--blue); }
-    .wallet-status-tag { display:inline-block; font-size:9px; font-family:var(--mono); font-weight:600; padding:1px 6px; border-radius:4px; margin-left:4px; background:rgba(0,214,143,0.12); color:var(--green); }
-    .wallet-dialog-status { margin-top:14px; font-size:12px; color:var(--muted); text-align:center; min-height:18px; }
-    @media(max-width:480px){ .hero{padding:50px 0 30px} .hero h1{font-size:26px} .network-pill{display:none} }
-  </style>
+/* ── Wallet dialog (BaseClean pattern) ── */
+dialog{border:none;border-radius:18px;padding:0;background:#0e1420;color:#eef2ff;max-width:420px;width:calc(100% - 32px);box-shadow:0 24px 80px rgba(0,0,0,.5)}
+dialog::backdrop{background:rgba(0,0,0,.65);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.dialog-inner{padding:24px}
+.dialog-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#77839a;font-size:18px;display:grid;place-items:center;transition:.2s}
+.dialog-close:hover{color:#fff;border-color:rgba(70,133,255,.4)}
+.wallet-choice-list{display:flex;flex-direction:column;gap:5px}
+.wallet-choice{display:flex;align-items:center;gap:12px;width:100%;padding:11px 13px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:#0a0f19;text-align:left;transition:.15s}
+.wallet-choice:hover{border-color:rgba(70,133,255,.4);background:#0d1524}
+.wallet-choice-mark{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex-shrink:0;background:#111827;border:1px solid rgba(255,255,255,.07)}
+.wallet-choice-mark img{width:19px;height:19px}
+.wallet-choice span{flex:1;min-width:0}
+.wallet-choice strong{display:block;font-size:14px;font-weight:600}
+.wallet-choice small{display:block;font-size:11px;color:#7e8aa2;margin-top:1px}
+.wallet-choice b{font-size:16px;color:#5f6a80;font-weight:400;transition:.15s}
+.wallet-choice:hover b{color:#78a8ff}
+.wallet-status-tag{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:5px;background:rgba(0,214,143,.12);color:#35e6a3}
+</style>
 </head>
-<body>
-  <div class="grid-glow"></div>
-  <div class="sky-comet" aria-hidden="true"><span></span><span></span></div>
-
-  <!-- Nav -->
-  <nav class="nav container">
-    <a class="brand" href="#">
-      <div class="brand-mark">
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13l-3-3"/><path d="M20 17H7l3 3"/><path d="M17 4l3 3-3 3"/><path d="M7 20l-3-3 3-3"/></svg>
-      </div>
-      BarterBase
-    </a>
-    <div class="nav-right">
-      <span class="network-pill"><i></i> Base</span>
-      <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()" type="button">☾ Dark</button>
-      <div id="navWallet">
-        <button class="nav-connect" onclick="openWalletDialog()">Connect Wallet</button>
-      </div>
+<body><div class="app">
+<header class="nav"><div class="container" style="display:flex;width:100%;justify-content:space-between;align-items:center"><a class="brand" href="#"><span class="logo"><svg viewBox="0 0 24 24" fill="none"><path d="M6 7.5 12 4l6 3.5v9L12 20l-6-3.5v-9Z" stroke="white" stroke-width="1.7"/><path d="m8.5 9 3.5 2 3.5-2M12 11v5" stroke="white" stroke-width="1.7"/></svg></span>BarterBase</a><div class="navright"><div class="pill">● <b>Base</b> Mainnet</div><button class="connect" id="connectBtn" onclick="openWallet()">Connect wallet</button></div></div></header>
+<main>
+<section class="hero container"><div class="eyebrow">PEER-TO-PEER NFT TRADING · BASE</div><h1>Trade what you have.<br><em>Get what you actually want.</em></h1><p>Make NFT-to-NFT offers, sweeten the deal with ETH, and settle directly wallet-to-wallet through a trustless escrow. No platform fee. No liquidity pool.</p><div class="hero-actions"><button class="primary" onclick="openWorkspace()">Create a swap</button><button class="ghost" onclick="document.getElementById('offers').scrollIntoView({behavior:'smooth'})">Explore offers</button></div><div class="zero"><span class="dot"></span> 0% BarterBase fee · You only pay Base gas</div></section>
+<section class="section container" id="offers"><div class="sectionhead"><div><div class="eyebrow">LIVE MARKET</div><h2>Offers worth hunting</h2></div><div class="tabs"><button class="tab active" onclick="filterOffers('all',this)">All</button><button class="tab" onclick="filterOffers('matches',this)">🎯 Matches</button><button class="tab" onclick="filterOffers('sweetened',this)">With ETH</button><button class="tab" onclick="filterOffers('wanted',this)">Wanted</button></div></div><div class="feed" id="offerFeed"><div class="empty">Connect your wallet or configure your Alchemy API key to load live NFT offers from Base.</div></div></section>
+<section class="workspace container" id="workspace"><div class="walletbar"><div><strong id="walletName">Wallet</strong><br><span id="walletBalance">Connected to Base Mainnet</span></div><button class="ghost" onclick="disconnect()">Disconnect</button></div><div class="workspace-grid"><div class="panel"><h3>Create your offer</h3><div class="panel-sub">Put your NFT in escrow and tell collectors what would make you say yes.</div><div class="steps"><i class="step on"></i><i class="step on"></i><i class="step on"></i></div><div class="field"><label>1 · NFT YOU GIVE</label><div class="nftpicker" id="myNfts"><div class="empty">Loading your NFTs…</div></div></div><div class="field"><label>2 · ETH SWEETENER <span class="muted">(optional)</span></label><input id="sweetener" inputmode="decimal" placeholder="0.00 ETH"><div class="hint">Add ETH to make your offer more attractive. It is locked with your NFT.</div></div><div class="field"><label>3 · NFT YOU WANT</label><input id="wantedCollection" placeholder="Wanted NFT collection contract (0x…)"><div class="row" style="margin-top:8px"><input id="wantedToken" placeholder="Specific token ID (optional)"><select id="wantedMode"><option value="specific">Specific NFT</option><option value="any">Any NFT from collection</option></select></div><div class="hint">For “Any”, the taker chooses the token ID from that collection when accepting.</div></div><div class="row"><div class="field"><label>PRIVATE TO WALLET <span class="muted">(optional)</span></label><input id="taker" placeholder="0x… or leave public"></div><div class="field"><label>EXPIRES</label><select id="expiry"><option value="0">Never</option><option value="1">24 hours</option><option value="7">7 days</option><option value="30">30 days</option></select></div></div><button class="primary" style="width:100%;margin-top:8px" onclick="createOffer()">Lock NFT & publish offer</button></div>
+<div class="panel"><h3>Your BarterBase</h3><div class="panel-sub">Track offers, counter-proposals and trades from one place.</div><div class="dashboard-nav"><button class="dashbtn active" onclick="showDash('my',this)">My offers</button><button class="dashbtn" onclick="showDash('watch',this)">Wishlist</button><button class="dashbtn" onclick="showDash('how',this)">How it works</button></div><div id="dashContent"><div class="my-list" id="myOffers"><div class="empty">Your offers will appear here after they are confirmed on Base.</div></div></div></div></div></section>
+<section class="docs container"><div class="eyebrow">WHY BARTERBASE</div><h2 style="font-size:30px;letter-spacing:-.04em;margin:5px 0 20px">A marketplace built around the trade, not the floor.</h2><div class="docsgrid"><div class="doc"><b>01 · MATCH</b><h4>Wishlists & wanted NFTs</h4><p>Tell the market exactly what you are hunting for instead of dumping your NFT for ETH first.</p></div><div class="doc"><b>02 · SWEETEN</b><h4>Make your offer irresistible</h4><p>Add ETH when the NFTs are not equal. Your sweetener is escrowed with the NFT.</p></div><div class="doc"><b>03 · NEGOTIATE</b><h4>Counter offers</h4><p>Create a linked counter-offer instead of walking away when the first deal is close.</p></div><div class="doc"><b>04 · SHARE</b><h4>Bring the right person</h4><p>Every offer can become a shareable link for X, Discord and collector communities.</p></div></div></section>
+</main><footer class="container">BarterBase · Built for fee-free P2P NFT swaps on Base · <span class="mono">0% platform fee</span></footer></div>
+<dialog id="walletDialog">
+  <div class="dialog-inner" style="position:relative">
+    <button class="dialog-close" onclick="closeWalletDialog()" aria-label="Close">×</button>
+    <p class="eyebrow">CONNECT WALLET</p>
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:4px">Choose your wallet</h3>
+    <p class="panel-sub">Connect securely on Base. BarterBase never sees your seed phrase.</p>
+    <div class="wallet-choice-list">
+      <button class="wallet-choice" onclick="handleWallet('base')">
+        <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/base/0052ff" alt=""></span>
+        <span><strong>Base Account</strong><small data-wallet-state="base">Recommended · Base App</small></span><b>→</b>
+      </button>
+      <button class="wallet-choice" onclick="handleWallet('metamask')">
+        <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/metamask/e2761b" alt=""></span>
+        <span><strong>MetaMask</strong><small data-wallet-state="metamask">Browser wallet</small></span><b>→</b>
+      </button>
+      <button class="wallet-choice" onclick="handleWallet('coinbase')">
+        <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/coinbase/ffffff" alt=""></span>
+        <span><strong>Coinbase Wallet</strong><small data-wallet-state="coinbase">Browser / Mobile</small></span><b>→</b>
+      </button>
+      <button class="wallet-choice" onclick="handleWallet('rainbow')">
+        <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/rainbow/ffffff" alt=""></span>
+        <span><strong>Rainbow</strong><small data-wallet-state="rainbow">Browser / Mobile</small></span><b>→</b>
+      </button>
+      <button class="wallet-choice" onclick="handleWallet('trust')">
+        <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/trustwallet/3375bb" alt=""></span>
+        <span><strong>Trust Wallet</strong><small data-wallet-state="trust">Browser / Mobile</small></span><b>→</b>
+      </button>
+      <button class="wallet-choice" onclick="handleWallet('rabby')">
+        <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/rabby/ffffff" alt=""></span>
+        <span><strong>Rabby</strong><small data-wallet-state="rabby">Browser wallet</small></span><b>→</b>
+      </button>
+      <button class="wallet-choice" onclick="handleWallet('phantom')">
+        <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/phantom/ab9ff2" alt=""></span>
+        <span><strong>Phantom</strong><small data-wallet-state="phantom">Browser wallet</small></span><b>→</b>
+      </button>
+      <button class="wallet-choice" onclick="handleWallet('wc')">
+        <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/walletconnect/ffffff" alt=""></span>
+        <span><strong>WalletConnect</strong><small>Scan QR with any mobile wallet</small></span><b>→</b>
+      </button>
     </div>
-  </nav>
+    <p class="hint" id="walletDialogStatus" style="text-align:center;min-height:16px"></p>
+  </div>
+</dialog>
+<div class="modal" id="offerModal"><div class="modalbox"><div class="modalhead"><h3 id="detailTitle">Swap offer</h3><button class="close" onclick="closeModal('offerModal')">×</button></div><div class="detail-art"><img id="detailGive" src="" alt="Offered NFT"><img id="detailWant" src="" alt="Wanted NFT"></div><div id="detailBody"></div><div id="acceptArea"></div><button class="ghost" style="width:100%;margin-top:8px" id="shareOfferBtn">🔗 Copy shareable offer link</button></div></div>
+<div class="toast" id="toast"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+<script>
+const CONFIG={CONTRACT:'REPLACE_WITH_BARTERBASE_CONTRACT',ALCHEMY_KEY:'REPLACE_WITH_ALCHEMY_KEY',BASE_CHAIN:8453,ALCHEMY_NFT:'https://base-mainnet.g.alchemy.com/nft/v3/'};
+const ABI=[
+'function nextOfferId() view returns (uint256)','function nextCounterOfferId() view returns (uint256)','function offers(uint256) view returns (address maker,address taker,address offeredCollection,uint256 offeredTokenId,uint256 sweetenerWei,address wantedCollection,uint256 wantedTokenId,bool wantedAny,uint64 expiry,uint256 parentOfferId,bool active)','function counterOffers(uint256) view returns (uint256 parentOfferId,address maker,address offeredCollection,uint256 offeredTokenId,uint256 sweetenerWei,uint64 expiry,bool active)','function getCounterOfferIds(uint256) view returns (uint256[])','function createOffer(address taker,address offeredCollection,uint256 offeredTokenId,uint256 sweetenerWei,address wantedCollection,uint256 wantedTokenId,bool wantedAny,uint64 expiry) payable returns (uint256)','function acceptOffer(uint256 offerId,uint256 takerTokenId)','function cancelOffer(uint256 offerId)','function expireOffer(uint256 offerId)','function createCounterOffer(uint256 parentOfferId,address offeredCollection,uint256 offeredTokenId,uint256 sweetenerWei,uint64 expiry) payable returns (uint256)','function acceptCounterOffer(uint256 counterOfferId)','function cancelCounterOffer(uint256 counterOfferId)','function expireCounterOffer(uint256 counterOfferId)','function pendingETH(address) view returns (uint256)','function withdrawPendingETH()',
+'event OfferCreated(uint256 indexed offerId,address indexed maker,address indexed offeredCollection,uint256 offeredTokenId,uint256 sweetenerWei,address wantedCollection,uint256 wantedTokenId,bool wantedAny,uint64 expiry,address taker,uint256 parentOfferId)','event OfferAccepted(uint256 indexed offerId,address indexed taker,uint256 takerTokenId)','event OfferCancelled(uint256 indexed offerId)','event OfferExpired(uint256 indexed offerId)','event CounterOfferCreated(uint256 indexed counterOfferId,uint256 indexed parentOfferId,address indexed maker,address offeredCollection,uint256 offeredTokenId,uint256 sweetenerWei,uint64 expiry)','event CounterOfferAccepted(uint256 indexed counterOfferId,uint256 indexed parentOfferId)','event CounterOfferCancelled(uint256 indexed counterOfferId)','event CounterOfferExpired(uint256 indexed counterOfferId)'];
+const ERC721=['function approve(address,uint256)','function getApproved(uint256) view returns(address)','function isApprovedForAll(address,address) view returns(bool)','function ownerOf(uint256) view returns(address)'];
+let provider=null,signer=null,user=null,wc=null,myNFTs=[],allOffers=[],currentFilter='all';
+function $(id){return document.getElementById(id)}
+function toast(msg,error=false){const t=$('toast');t.textContent=msg;t.className='toast show'+(error?' error':'');clearTimeout(window._toast);window._toast=setTimeout(()=>t.className='toast',4200)}
+function openModal(id){$(id).classList.add('open')}function closeModal(id){$(id).classList.remove('open')}
+function openWorkspace(){if(!user)openWallet();else $('workspace').style.display='block'}
+function short(a){return a?a.slice(0,6)+'…'+a.slice(-4):''}
+function configured(){return CONFIG.CONTRACT.startsWith('0x')&&CONFIG.CONTRACT.length===42&&!CONFIG.CONTRACT.includes('REPLACE')}
+async function ensureBase(){const net=await provider.getNetwork();if(net.chainId!==CONFIG.BASE_CHAIN){try{await provider.send('wallet_switchEthereumChain',[{chainId:'0x2105'}])}catch(e){throw new Error('Please switch your wallet to Base Mainnet.')}}}
+function pickInjected(type){const e=window.ethereum;if(!e)return null;const ps=e.providers||[e];const flags={metamask:'isMetaMask',coinbase:'isCoinbaseWallet',rabby:'isRabby'};return ps.find(p=>p[flags[type]])||e}
 
-  <main>
-    <!-- Hero -->
-    <section class="hero container" id="heroSection">
-      <p class="eyebrow">TRUSTLESS P2P ON BASE</p>
-      <h1>Lock assets.<br><em>Swap peers.</em><br>Zero fees.</h1>
-      <p class="hero-sub">A self-custody escrow for peer-to-peer trading on Base. Your wallet signs every action — we never hold your tokens.</p>
-      <div class="hero-security">🔒 We never request your seed phrase, private key, or dangerous wallet permissions</div>
-      <div class="hero-cta">
-        <button class="nav-connect" onclick="openWalletDialog()" style="padding:12px 36px;font-size:14px;border-radius:14px">Connect Wallet</button>
-      </div>
-    </section>
+const WC_PROJECT_ID='c7b79c5fd466f0d602ab30c182442d0b';
+const STORAGE_KEY='barterbase_wallet_session';
+let wcConnector=null,activeProvider=null;
+function openWalletDialog(){detectInstalled();document.getElementById('walletDialog').showModal()}
+function openWallet(){openWalletDialog()}
+function closeWalletDialog(){document.getElementById('walletDialog').close()}
+document.getElementById('walletDialog')?.addEventListener('click',function(e){if(e.target===this)closeWalletDialog()});
 
-    <!-- Workspace (hidden until connected) -->
-    <section class="workspace container" id="workspace" style="display:none">
-      <div class="workspace-head">
-        <div><p class="eyebrow">WORKSPACE</p><h2>Swap Dashboard</h2></div>
-        <div class="wallet-status" id="walletStatus">Connected</div>
-      </div>
-      <div class="workspace-grid">
-        <div class="panel">
-          <div class="panel-title"><span class="dot"></span> Create Swap Offer</div>
-          <div class="form-group">
-            <label>Asset You Lock (Offer)</label>
-            <input type="text" id="offerInput" placeholder="e.g. 0.5 ETH">
-          </div>
-          <div class="form-group">
-            <label>Asset You Want (Receive)</label>
-            <input type="text" id="wantInput" placeholder="e.g. 1000 USDC">
-          </div>
-          <button class="submit-btn" onclick="createTrade()">Lock &amp; Create Offer</button>
-        </div>
-        <div class="panel">
-          <div class="panel-title"><span class="dot" style="background:var(--green)"></span> Live Escrows</div>
-          <div class="escrow-list" id="escrowList">
-            <div class="empty-state"><span>✦</span><p>No active escrows yet. Create one to get started.</p></div>
-          </div>
-        </div>
-      </div>
-    </section>
+function detectInstalled(){const eth=window.ethereum;if(!eth)return;const providers=eth.providers||[eth];const checks=[['isMetaMask','metamask'],['isCoinbaseWallet','coinbase'],['isRabby','rabby'],['isPhantom','phantom']];checks.forEach(([prop,name])=>{const found=providers.some(p=>p[prop])||eth[prop];const el=document.querySelector(`[data-wallet-state="${name}"]`);if(el&&found)el.innerHTML='Browser wallet <span class="wallet-status-tag">detected</span>'})}
+function getProvider(type){const eth=window.ethereum;if(!eth)return null;const providers=eth.providers||[eth];if(providers.length<=1)return eth;const map={metamask:'isMetaMask',coinbase:'isCoinbaseWallet',rabby:'isRabby',phantom:'isPhantom'};const prop=map[type];if(prop){const found=providers.find(p=>p[prop]);if(found)return found}return eth}
+function handleWallet(type){closeWalletDialog();if(type==='wc'){connectWC();return}if(type==='base'){const eth=getProvider('metamask')||window.ethereum;if(eth){connectInjected(eth,'base')}else{toast('No injected wallet found. Install MetaMask or use WalletConnect.',true)}return}
+const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);if(isMobile){const host=window.location.host+window.location.pathname;const url=encodeURIComponent(window.location.href);const links={metamask:`https://metamask.app.link/dapp/${host}`,coinbase:`https://go.cb-w.com/dapp?cb_url=${url}`,rainbow:`https://rainbow.me/`,trust:`https://link.trustwallet.com/open_url?coin_id=60&url=${url}`,phantom:`https://phantom.app/ul/browse/${host}`};if(links[type]){window.location.href=links[type];return}}
+const eth=getProvider(type);if(!eth){toast('Wallet not detected. Install it or use WalletConnect below.',true);return}connectInjected(eth,type)}
+async function connectInjected(eth,type){try{provider=new ethers.providers.Web3Provider(eth,'any');await eth.request({method:'eth_requestAccounts'});signer=provider.getSigner();user=await signer.getAddress();activeProvider=eth;if(eth.on){eth.on('accountsChanged',a=>a.length?location.reload():disconnect());eth.on('chainChanged',()=>location.reload())}await ensureBase();closeWalletDialog();connectedUI(type);await refreshAll()}catch(e){if(e.code!==4001)toast(e.reason||e.message||String(e),true)}}
+async function connectWC(){const statusEl=document.getElementById('walletDialogStatus');statusEl.textContent='Loading WalletConnect SDK…';openWalletDialog();try{if(typeof window.EthereumProvider==='undefined'){await new Promise(r=>setTimeout(r,1500))}if(typeof window.EthereumProvider==='undefined'){statusEl.textContent='SDK failed to load. Check your connection and refresh.';return}statusEl.textContent='Opening QR code…';closeWalletDialog();wcConnector=await window.EthereumProvider.init({projectId:WC_PROJECT_ID,chains:[8453],showQrModal:true});await wcConnector.enable();provider=new ethers.providers.Web3Provider(wcConnector,'any');signer=provider.getSigner();user=await signer.getAddress();activeProvider=wcConnector;wcConnector.on('session_delete',()=>disconnect());wcConnector.on('accountsChanged',a=>a.length?location.reload():disconnect());wcConnector.on('chainChanged',()=>location.reload());connectedUI('wc');await ensureBase();await refreshAll()}catch(e){if(e.code!==4001)toast('WalletConnect failed: '+(e.message||e),true);statusEl.textContent=''}}
+function connectedUI(type){try{localStorage.setItem(STORAGE_KEY,JSON.stringify({address:user,type:type,ts:Date.now()}))}catch(e){}
+const short=user.slice(0,6)+'…'+user.slice(-4);
+const netPill=document.querySelector('.nav .pill');if(netPill)netPill.innerHTML=`<span class="dot"></span> <b>${short}</b>`;
+$('connectBtn').textContent='Disconnect';$('connectBtn').onclick=disconnect;$('connectBtn').classList.add('connected');
+$('walletName').textContent=short;$('walletBalance').textContent='Connected to Base Mainnet';$('workspace').style.display='block'}
+async function disconnect(){try{if(activeProvider&&activeProvider.request){await activeProvider.request({method:'wallet_revokePermissions',params:[{eth_accounts:{}}]}).catch(()=>{})}}catch(e){}
+if(wcConnector&&wcConnector.disconnect){try{await wcConnector.disconnect()}catch(e){}}
+try{localStorage.removeItem(STORAGE_KEY)}catch(e){}
+provider=signer=user=activeProvider=wcConnector=null;
+const netPill=document.querySelector('.nav .pill');if(netPill)netPill.innerHTML='● <b>Base</b> Mainnet';
+$('connectBtn').textContent='Connect wallet';$('connectBtn').onclick=openWallet;$('connectBtn').classList.remove('connected');
+$('workspace').style.display='none';toast('Wallet disconnected.')}
+window.addEventListener('DOMContentLoaded',async()=>{const saved=localStorage.getItem(STORAGE_KEY);if(!saved)return;try{const{address,type,ts}=JSON.parse(saved);if(Date.now()-ts>7*24*60*60*1000){localStorage.removeItem(STORAGE_KEY);return}
+if(type==='wc')return;const eth=getProvider(type==='base'?'metamask':type);if(eth&&eth.request){const accounts=await eth.request({method:'eth_accounts'});if(accounts&&accounts.length&&accounts[0].toLowerCase()===address.toLowerCase()){provider=new ethers.providers.Web3Provider(eth,'any');signer=provider.getSigner();user=accounts[0];activeProvider=eth;if(eth.on){eth.on('accountsChanged',a=>a.length?location.reload():disconnect());eth.on('chainChanged',()=>location.reload())}connectedUI(type);await refreshAll()}else{localStorage.removeItem(STORAGE_KEY)}}}catch(e){localStorage.removeItem(STORAGE_KEY)}});
 
-    <!-- Docs -->
-    <section class="docs container">
-      <div class="docs-intro">
-        <p class="eyebrow">HOW IT WORKS</p>
-        <h2>Everything you need, explained clearly.</h2>
-        <p>BarterBase is a self-custody escrow on Base. Your wallet signs every on-chain action. We never take custody of your tokens.</p>
-      </div>
-      <div class="docs-grid">
-        <div class="doc-card"><span>01</span><h3>Connect your wallet</h3><p>Link MetaMask, Coinbase, Rainbow, Trust, Rabby, Phantom, Base Account, or scan via WalletConnect. Your keys, your custody.</p></div>
-        <div class="doc-card"><span>02</span><h3>Create a swap offer</h3><p>Specify what you want to lock and what you want in return. The smart contract holds your tokens until a peer accepts.</p></div>
-        <div class="doc-card"><span>03</span><h3>Peer accepts the swap</h3><p>Another user reviews your offer and locks their side of the trade. Both assets are secured in the escrow contract.</p></div>
-        <div class="doc-card"><span>04</span><h3>Trustless settlement</h3><p>Once both parties confirm, the contract atomically swaps. No middleman, no counterparty risk.</p></div>
-        <div class="doc-card"><span>05</span><h3>Zero protocol fees</h3><p>0% app fee. You only pay Base network gas. All costs shown before you sign.</p></div>
-        <div class="doc-card"><span>06</span><h3>Cancel anytime</h3><p>No one accepted? Cancel and reclaim your locked assets. Full control, always.</p></div>
-      </div>
-    </section>
-  </main>
 
-  <footer class="container">
-    <p>BarterBase Protocol (<span style="font-family:var(--mono)">0xb323...fc4B</span>) · Built on Base · Zero Fees</p>
-  </footer>
+async function refreshAll(){await Promise.all([loadBalance(),loadNFTs(),loadOffers()])}
+async function loadBalance(){if(!user)return;const b=await provider.getBalance(user);$('walletBalance').textContent=ethers.utils.formatEther(b).slice(0,9)+' ETH · Base Mainnet'}
+async function loadNFTs(){const box=$('myNfts');if(CONFIG.ALCHEMY_KEY.includes('REPLACE')){box.innerHTML='<div class="empty" style="grid-column:1/-1">Add your Alchemy Base NFT API key in CONFIG to load wallet NFTs.</div>';return}try{const url=CONFIG.ALCHEMY_NFT+CONFIG.ALCHEMY_KEY+'/getNFTsForOwner?owner='+user+'&withMetadata=true&pageSize=100';const r=await fetch(url);if(!r.ok)throw new Error('Alchemy NFT request failed');const d=await r.json();myNFTs=(d.ownedNfts||[]).map(n=>({contract:n.contract?.address,tokenId:n.tokenId,name:n.name||n.title||('NFT #'+n.tokenId),image:n.image?.cachedUrl||n.image?.thumbnailUrl||n.image?.pngUrl||n.image?.originalUrl||''})).filter(n=>n.contract&&n.tokenId);renderNFTs()}catch(e){box.innerHTML='<div class="empty" style="grid-column:1/-1">Could not load NFTs. Check your Alchemy key and try again.</div>';console.error(e)}}
+function renderNFTs(){const box=$('myNfts');if(!myNFTs.length){box.innerHTML='<div class="empty" style="grid-column:1/-1">No ERC-721 NFTs found in this wallet.</div>';return}box.innerHTML=myNFTs.map((n,i)=>`<button class="pick" onclick="selectNFT(${i})" id="nft-${i}"><img src="${safe(n.image)}" onerror="this.style.display='none'"><span>${safe(n.name)}</span></button>`).join('')}
+let selected=null;function selectNFT(i){selected=myNFTs[i];document.querySelectorAll('.pick').forEach(x=>x.classList.remove('selected'));$('nft-'+i).classList.add('selected')}
+function safe(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
-  <!-- Wallet Dialog -->
-  <dialog id="walletDialog">
-    <div class="dialog-inner" style="position:relative">
-      <button class="dialog-close" onclick="closeWalletDialog()" aria-label="Close">×</button>
-      <p class="eyebrow">CONNECT WALLET</p>
-      <h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Choose your wallet</h2>
-      <p class="wallet-copy">Connect securely on Base. BarterBase never sees your seed phrase or private key.</p>
-      <div class="wallet-choice-list">
-        <button class="wallet-choice" onclick="handleWallet('base')">
-          <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/base/0052ff" alt=""></span>
-          <span><strong>Base Account</strong><small>Recommended in Base App</small></span><b>→</b>
-        </button>
-        <button class="wallet-choice" onclick="handleWallet('metamask')">
-          <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/metamask/e2761b" alt=""></span>
-          <span><strong>MetaMask</strong><small data-wallet-state="metamask">Browser wallet</small></span><b>→</b>
-        </button>
-        <button class="wallet-choice" onclick="handleWallet('coinbase')">
-          <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/coinbase/ffffff" alt=""></span>
-          <span><strong>Coinbase Wallet</strong><small data-wallet-state="coinbase">Browser wallet</small></span><b>→</b>
-        </button>
-        <button class="wallet-choice" onclick="handleWallet('rainbow')">
-          <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/rainbow/ffffff" alt=""></span>
-          <span><strong>Rainbow</strong><small data-wallet-state="rainbow">Browser / Mobile</small></span><b>→</b>
-        </button>
-        <button class="wallet-choice" onclick="handleWallet('trust')">
-          <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/trustwallet/3375bb" alt=""></span>
-          <span><strong>Trust Wallet</strong><small data-wallet-state="trust">Browser / Mobile</small></span><b>→</b>
-        </button>
-        <button class="wallet-choice" onclick="handleWallet('rabby')">
-          <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/ethereum/627eea" alt=""></span>
-          <span><strong>Rabby Wallet</strong><small data-wallet-state="rabby">Browser wallet</small></span><b>→</b>
-        </button>
-        <button class="wallet-choice" onclick="handleWallet('phantom')">
-          <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/phantom/ab9ff2" alt=""></span>
-          <span><strong>Phantom</strong><small data-wallet-state="phantom">Browser wallet</small></span><b>→</b>
-        </button>
-        <button class="wallet-choice" onclick="handleWallet('wc')">
-          <span class="wallet-choice-mark"><img src="https://cdn.simpleicons.org/walletconnect/ffffff" alt=""></span>
-          <span><strong>WalletConnect</strong><small>Connect a mobile wallet</small></span><b>→</b>
-        </button>
-      </div>
-      <p class="wallet-dialog-status" id="walletDialogStatus"></p>
-    </div>
-  </dialog>
+async function approveNFT(collection,tokenId){const erc=new ethers.Contract(collection,ERC721,signer);const approved=await erc.getApproved(tokenId);const all=await erc.isApprovedForAll(user,CONFIG.CONTRACT);if(approved.toLowerCase()===CONFIG.CONTRACT.toLowerCase()||all)return true;toast('Approve the NFT in your wallet…');const tx=await erc.approve(CONFIG.CONTRACT,tokenId);await tx.wait();return true}
+function expiryTs(){const d=Number($('expiry').value||0);return d?Math.floor(Date.now()/1000)+d*86400:0}
+let counterParentId=0;
+async function createOffer(){if(!signer)return openWallet();if(!selected)return toast('Choose the NFT you want to give.',true);if(!configured())return toast('Set the deployed BarterBase contract address first.',true);let sweet='0';try{sweet=ethers.utils.parseEther(($('sweetener').value||'0').trim()).toString()}catch(e){return toast('Invalid ETH sweetener.',true)}try{await ensureBase();await approveNFT(selected.contract,selected.tokenId);const c=new ethers.Contract(CONFIG.CONTRACT,ABI,signer);const expiry=expiryTs();let tx;if(counterParentId){tx=await c.createCounterOffer(counterParentId,selected.contract,selected.tokenId,sweet,expiry,{value:sweet});}else{const wanted=$('wantedCollection').value.trim();if(!ethers.utils.isAddress(wanted))return toast('Enter a valid wanted collection address.',true);const mode=$('wantedMode').value;const wantedAny=mode==='any';const wantedId=$('wantedToken').value.trim();if(!wantedAny&&!/^\d+$/.test(wantedId))return toast('Enter the wanted token ID.',true);const taker=$('taker').value.trim()||ethers.constants.AddressZero;if(!ethers.utils.isAddress(taker))return toast('Private wallet address is invalid.',true);tx=await c.createOffer(taker,selected.contract,selected.tokenId,sweet,wanted,wantedAny?'0':wantedId,wantedAny,expiry,{value:sweet});}toast('Transaction submitted…');await tx.wait();toast(counterParentId?'Counter-offer locked and sent.':'Offer published. Share the offer link.');counterParentId=0;$('sweetener').value='';$('wantedCollection').value='';$('wantedToken').value='';$('taker').value='';await refreshAll();}catch(e){toast(readError(e),true)}}
+function readError(e){return e?.error?.reason||e?.reason||e?.data?.message||e?.error?.message||e?.message||String(e)}
+async function loadOffers(){const feed=$('offerFeed');if(!configured()){feed.innerHTML='<div class="empty" style="grid-column:1/-1">Deploy the BarterBase contract and add its address to CONFIG.</div>';return}try{const c=new ethers.Contract(CONFIG.CONTRACT,ABI,provider);const count=(await c.nextOfferId()).toNumber();const start=Math.max(1,count-60);allOffers=[];for(let i=start;i<count;i++){const o=await c.offers(i);if(o.active){allOffers.push({id:i,maker:o.maker,taker:o.taker,offeredCollection:o.offeredCollection,offeredTokenId:o.offeredTokenId.toString(),sweetener:o.sweetenerWei,wantedCollection:o.wantedCollection,wantedTokenId:o.wantedTokenId.toString(),wantedAny:o.wantedAny,expiry:o.expiry.toNumber()})}}await renderOffers();maybeOpenSharedOffer();}catch(e){feed.innerHTML='<div class="empty" style="grid-column:1/-1">Could not read live offers from Base.</div>';console.error(e)}}
+function filterOffers(f,b){currentFilter=f;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderOffers()}
+function matchesMyWallet(o){if(!myNFTs.length)return false;return myNFTs.some(n=>n.contract?.toLowerCase()===o.wantedCollection.toLowerCase()&& (o.wantedAny||String(n.tokenId)===String(o.wantedTokenId)))}
 
-  <!-- Ethers.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-  <script>
-    // ── Config ──
-    const CONTRACT = "0xb3238e0E5F6288377F4CA1708e43F9147704fc4B";
-    const ABI = [
-      "function createTrade(address _taker, address _tokenOffered, uint256 _amountOrIdOffered, address _tokenWanted, uint256 _amountOrIdWanted, bool _isNFT) external payable returns (uint256)",
-      "function acceptTrade(uint256 _tradeId) external payable",
-      "function cancelTrade(uint256 _tradeId) external",
-      "function tradeCounter() external view returns (uint256)"
-    ];
-    const WC_PROJECT_ID = "c7b79c5fd466f0d602ab30c182442d0b";
-    const STORAGE_KEY = "barterbase_wallet_session";
-
-    let provider, signer, userAddress, activeProvider, wcConnector;
-
-    // ── Theme ──
-    function toggleTheme() {
-      const h = document.documentElement;
-      const btn = document.getElementById('themeBtn');
-      if (h.classList.contains('dark')) { h.classList.remove('dark'); btn.textContent = '☀ Light'; }
-      else { h.classList.add('dark'); btn.textContent = '☾ Dark'; }
-    }
-
-    // ── Wallet Dialog ──
-    function openWalletDialog() {
-      detectInstalled();
-      document.getElementById('walletDialog').showModal();
-    }
-    function closeWalletDialog() { document.getElementById('walletDialog').close(); }
-    document.getElementById('walletDialog').addEventListener('click', function(e) { if (e.target === this) closeWalletDialog(); });
-
-    function detectInstalled() {
-      const eth = window.ethereum;
-      if (!eth) return;
-      const providers = eth.providers || [eth];
-      const checks = [
-        ['isMetaMask', 'metamask'],
-        ['isCoinbaseWallet', 'coinbase'],
-        ['isRabby', 'rabby'],
-        ['isBraveWallet', 'brave'],
-        ['isPhantom', 'phantom'],
-      ];
-      checks.forEach(([prop, name]) => {
-        const found = providers.some(p => p[prop]) || (name === 'metamask' && eth.isMetaMask);
-        const el = document.querySelector(`[data-wallet-state="${name}"]`);
-        if (el && found) el.innerHTML = 'Installed <span class="wallet-status-tag">detected</span>';
-      });
-    }
-
-    // ── Get specific provider ──
-    function getProvider(type) {
-      const eth = window.ethereum;
-      if (!eth) return null;
-      const providers = eth.providers || [eth];
-      if (providers.length <= 1) return eth; // only one provider, return it
-      const map = {
-        metamask: 'isMetaMask',
-        coinbase: 'isCoinbaseWallet',
-        rabby: 'isRabby',
-        phantom: 'isPhantom',
-        brave: 'isBraveWallet',
-      };
-      const prop = map[type];
-      if (prop) {
-        // IMPORTANT: find the FIRST match for this specific wallet
-        const found = providers.find(p => p[prop]);
-        if (found) return found;
-      }
-      // Fallback: return window.ethereum itself
-      return eth;
-    }
-
-    // ── Handle Wallet ──
-    function handleWallet(type) {
-      closeWalletDialog();
-
-      if (type === 'wc') { connectWalletConnect(); return; }
-      if (type === 'base') { handleWallet('metamask'); return; } // Base Account uses MetaMask/Injected
-
-      // Mobile deep-links
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      if (isMobile) {
-        const host = window.location.host + window.location.pathname;
-        const url = encodeURIComponent(window.location.href);
-        const links = {
-          metamask: `https://metamask.app.link/dapp/${host}`,
-          coinbase: `https://go.cb-w.com/dapp?cb_url=${url}`,
-          rainbow: `https://rainbow.me/`,
-          trust: `https://link.trustwallet.com/open_url?coin_id=60&url=${url}`,
-          phantom: `https://phantom.app/ul/browse/${host}`,
-        };
-        if (links[type]) { window.location.href = links[type]; return; }
-      }
-
-      // Desktop / installed
-      const eth = getProvider(type);
-      if (!eth) { alert("Wallet not detected. Please install " + type + " or use WalletConnect."); return; }
-      connectInjected(eth, type);
-    }
-
-    async function connectInjected(eth, type) {
-      try {
-        provider = new ethers.providers.Web3Provider(eth);
-        const accounts = await eth.request({ method: 'eth_requestAccounts' });
-        signer = provider.getSigner();
-        userAddress = accounts[0] || await signer.getAddress();
-        activeProvider = eth;
-
-        // Listen for changes
-        if (eth.on) {
-          eth.on('accountsChanged', (a) => {
-            if (!a.length) { disconnectWallet(); }
-            else { userAddress = a[0]; onConnected(type); }
-          });
-          eth.on('chainChanged', () => window.location.reload());
-        }
-
-        onConnected(type);
-      } catch (e) {
-        if (e.code !== 4001) alert("Connection failed: " + (e.message || e));
-      }
-    }
-
-    async function connectWalletConnect() {
-      const statusEl = document.getElementById('walletDialogStatus');
-      statusEl.textContent = "Loading WalletConnect SDK...";
-      openWalletDialog();
-
-      try {
-        if (typeof window.EthereumProvider === 'undefined') {
-          // Wait a moment for lazy-loaded script
-          await new Promise(r => setTimeout(r, 1500));
-        }
-        if (typeof window.EthereumProvider === 'undefined') {
-          statusEl.textContent = "WalletConnect SDK failed to load. Please refresh.";
-          return;
-        }
-        statusEl.textContent = "Opening QR code...";
-        closeWalletDialog();
-
-        wcConnector = await window.EthereumProvider.init({
-          projectId: WC_PROJECT_ID,
-          chains: [8453],
-          showQrModal: true,
-        });
-        await wcConnector.enable();
-        provider = new ethers.providers.Web3Provider(wcConnector);
-        signer = provider.getSigner();
-        userAddress = await signer.getAddress();
-        activeProvider = wcConnector;
-
-        wcConnector.on('disconnect', () => disconnectWallet());
-        wcConnector.on('accountsChanged', (a) => { if (!a.length) disconnectWallet(); else { userAddress = a[0]; onConnected('wc'); } });
-
-        onConnected('wc');
-      } catch (e) {
-        if (e.code !== 4001) alert("WalletConnect failed: " + (e.message || e));
-        statusEl.textContent = "";
-      }
-    }
-
-    // ── On Connected ──
-    function onConnected(type) {
-      // Save session
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ address: userAddress, type: type, ts: Date.now() }));
-
-      const short = userAddress.substring(0, 6) + '...' + userAddress.substring(38);
-      document.getElementById('navWallet').innerHTML = `
-        <div class="nav-address">
-          <div class="dot">${userAddress.substring(2,4).toUpperCase()}</div>
-          ${short}
-        </div>
-        <button class="nav-disconnect" onclick="disconnectWallet()">Disconnect</button>`;
-
-      document.getElementById('heroSection').style.display = 'none';
-      document.getElementById('workspace').style.display = 'block';
-      loadBalance();
-    }
-
-    // ── Disconnect (real) ──
-    async function disconnectWallet() {
-      try {
-        if (activeProvider && activeProvider.request) {
-          await activeProvider.request({ method: "wallet_revokePermissions", params: [{ eth_accounts: {} }] }).catch(() => {});
-        }
-      } catch(e) {}
-
-      if (wcConnector && wcConnector.disconnect) {
-        try { await wcConnector.disconnect(); } catch(e) {}
-      }
-
-      provider = signer = userAddress = activeProvider = wcConnector = null;
-      localStorage.removeItem(STORAGE_KEY);
-
-      document.getElementById('navWallet').innerHTML = '<button class="nav-connect" onclick="openWalletDialog()">Connect Wallet</button>';
-      document.getElementById('heroSection').style.display = '';
-      document.getElementById('workspace').style.display = 'none';
-    }
-
-    // ── Auto-reconnect on page load (session persisted) ──
-    window.addEventListener('DOMContentLoaded', () => {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) return;
-      try {
-        const { address, type, ts } = JSON.parse(saved);
-        // Session valid for 7 days
-        if (Date.now() - ts > 7 * 24 * 60 * 60 * 1000) { localStorage.removeItem(STORAGE_KEY); return; }
-        // Try reconnecting silently
-        if (window.ethereum) {
-          const eth = type === 'wc' ? null : getProvider(type || 'metamask');
-          if (eth && eth.request) {
-            eth.request({ method: 'eth_accounts' }).then(accounts => {
-              if (accounts && accounts.length && accounts[0].toLowerCase() === address.toLowerCase()) {
-                provider = new ethers.providers.Web3Provider(eth);
-                signer = provider.getSigner();
-                userAddress = accounts[0];
-                activeProvider = eth;
-                if (eth.on) {
-                  eth.on('accountsChanged', (a) => { if (!a.length) disconnectWallet(); else { userAddress = a[0]; onConnected(type); } });
-                  eth.on('chainChanged', () => window.location.reload());
-                }
-                onConnected(type);
-              } else { localStorage.removeItem(STORAGE_KEY); }
-            }).catch(() => { localStorage.removeItem(STORAGE_KEY); });
-          }
-        }
-      } catch(e) { localStorage.removeItem(STORAGE_KEY); }
-    });
-
-    // ── Load Balance ──
-    async function loadBalance() {
-      if (!provider || !userAddress) return;
-      try {
-        const bal = await provider.getBalance(userAddress);
-        const eth = parseFloat(ethers.utils.formatEther(bal)).toFixed(4);
-        document.getElementById('walletStatus').textContent = `Balance: ${eth} ETH`;
-      } catch(e) { console.warn(e); }
-    }
-
-    // ── Create Trade ──
-    async function createTrade() {
-      const offer = document.getElementById('offerInput').value;
-      const want = document.getElementById('wantInput').value;
-      if (!offer || !want) { alert("Please fill in both fields."); return; }
-      if (!signer) { alert("Connect your wallet first."); return; }
-      try {
-        const c = new ethers.Contract(CONTRACT, ABI, signer);
-        const tx = await c.createTrade(
-          "0x0000000000000000000000000000000000000000",
-          ethers.constants.AddressZero, ethers.utils.parseEther("0.001"),
-          ethers.constants.AddressZero, ethers.utils.parseEther("0.001"),
-          false, { value: ethers.utils.parseEther("0.001") }
-        );
-        alert("Transaction sent! Hash: " + tx.hash);
-        await tx.wait();
-        alert("Swap offer created on Base!");
-        document.getElementById('offerInput').value = '';
-        document.getElementById('wantInput').value = '';
-        addEscrow(offer, want);
-      } catch (e) { alert("Error: " + (e.reason || e.message)); }
-    }
-
-    function addEscrow(offer, want) {
-      const list = document.getElementById('escrowList');
-      const empty = list.querySelector('.empty-state');
-      if (empty) empty.remove();
-      const id = Math.floor(Math.random() * 9000) + 1000;
-      const card = document.createElement('div');
-      card.className = 'escrow-card';
-      card.innerHTML = `
-        <div class="escrow-head"><span class="escrow-id">Escrow #${id}</span><span class="escrow-badge badge-active">Active</span></div>
-        <div class="escrow-row">
-          <div class="escrow-col"><div class="label">You Give</div><div class="value">${offer}</div><div class="chain">Base Native</div></div>
-          <div class="escrow-col"><div class="label">You Receive</div><div class="value">${want}</div><div class="chain">Base ERC-20</div></div>
-        </div>
-        <div class="escrow-foot"><div class="escrow-fee">Fee: <b>0%</b></div><button class="accept-btn" onclick="acceptTrade()">Accept Swap</button></div>`;
-      list.prepend(card);
-    }
-
-    async function acceptTrade() {
-      if (!signer) { alert("Connect your wallet first."); return; }
-      try {
-        const c = new ethers.Contract(CONTRACT, ABI, signer);
-        const tx = await c.acceptTrade(0, { value: ethers.utils.parseEther("0.001") });
-        alert("Transaction sent! Hash: " + tx.hash);
-        await tx.wait();
-        alert("Swap accepted on Base!");
-      } catch (e) { alert("Error: " + (e.reason || e.message)); }
-    }
-  </script>
-
-  <!-- WalletConnect SDK (lazy loaded, non-blocking) -->
-  <script>
-    (function() {
-      var s = document.createElement('script');
-      s.src = 'https://unpkg.com/@walletconnect/ethereum-provider@2.11.2/dist/index.umd.js';
-      s.async = true;
-      s.onerror = function() { console.warn('WalletConnect SDK failed to load'); };
-      document.head.appendChild(s);
-    })();
-  </script>
-</body>
-</html>
+async function nftPreview(collection,id){if(CONFIG.ALCHEMY_KEY.includes('REPLACE'))return '';try{const u=CONFIG.ALCHEMY_NFT+CONFIG.ALCHEMY_KEY+'/getNFTMetadata?contractAddress='+encodeURIComponent(collection)+'&tokenId='+encodeURIComponent(id)+'&refreshCache=false';const r=await fetch(u);if(!r.ok)return '';const n=await r.json();return n.image?.cachedUrl||n.image?.thumbnailUrl||n.image?.pngUrl||n.image?.originalUrl||''}catch(e){return ''}}
+function placeholder(id){return 'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600"><rect width="100%" height="100%" fill="#121a2a"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#71809b" font-family="sans-serif" font-size="40">#${id}</text></svg>`)}
+async function renderOffers(){const feed=$('offerFeed');let arr=[...allOffers];if(currentFilter==='sweetened')arr=arr.filter(o=>o.sweetener.gt(0));if(currentFilter==='wanted')arr=arr.filter(o=>o.wantedAny||o.wantedTokenId!=='0');if(currentFilter==='matches')arr=arr.filter(matchesMyWallet);arr.sort((a,b)=>Number(matchesMyWallet(b))-Number(matchesMyWallet(a)));if(!arr.length){feed.innerHTML='<div class="empty" style="grid-column:1/-1">No matching live offers yet. Be the first to make one.</div>';return}feed.innerHTML=arr.map(o=>`<article class="offer-card" onclick="showOffer(${o.id})"><div class="artrow"><div class="nft"><img data-nft="${o.id}:give" src="${placeholder(o.offeredTokenId)}" alt=""><span class="tag">THEY GIVE</span></div><div class="nft"><img data-nft="${o.id}:want" src="${placeholder(o.wantedTokenId||'?')}" alt=""><span class="tag">THEY WANT</span></div></div><div class="swapline">⇄</div><div class="meta"><h3>${o.wantedAny?'Any NFT from this collection':'NFT #'+o.wantedTokenId}</h3><div class="muted mono">Offer #${o.id} · ${short(o.offeredCollection)} #${o.offeredTokenId}</div>${matchesMyWallet(o)?'<div class="sweet">🎯 Matches an NFT in your wallet</div>':''}<div class="deal"><span class="sweet">${o.sweetener.gt(0)?'＋ '+ethers.utils.formatEther(o.sweetener)+' ETH sweetener':'NFT for NFT'}</span><button class="view" onclick="event.stopPropagation();showOffer(${o.id})">View offer</button></div></div></article>`).join('');await Promise.all(arr.map(async o=>{const g=await nftPreview(o.offeredCollection,o.offeredTokenId);const w=o.wantedAny?'':await nftPreview(o.wantedCollection,o.wantedTokenId);document.querySelector(`[data-nft="${o.id}:give"]`)?.setAttribute('src',g||placeholder(o.offeredTokenId));document.querySelector(`[data-nft="${o.id}:want"]`)?.setAttribute('src',w||placeholder(o.wantedTokenId||'?'))}))}
+async function showOffer(id){const o=allOffers.find(x=>x.id===id);if(!o)return;openModal('offerModal');$('detailTitle').textContent='Swap offer #'+id;$('detailGive').src=await nftPreview(o.offeredCollection,o.offeredTokenId)||placeholder(o.offeredTokenId);$('detailWant').src=o.wantedAny?placeholder('?'):await nftPreview(o.wantedCollection,o.wantedTokenId)||placeholder(o.wantedTokenId);const counters=await getCounters(id);const isMaker=user&&o.maker.toLowerCase()===user.toLowerCase();$('detailBody').innerHTML=`<div class="detail-line"><span>Maker</span><b class="mono">${short(o.maker)}</b></div><div class="detail-line"><span>They give</span><b>NFT #${o.offeredTokenId}${o.sweetener.gt(0)?' + '+ethers.utils.formatEther(o.sweetener)+' ETH':''}</b></div><div class="detail-line"><span>They want</span><b>${o.wantedAny?'Any NFT from '+short(o.wantedCollection):'NFT #'+o.wantedTokenId}</b></div>${o.expiry?'<div class="detail-line"><span>Expires</span><b>'+new Date(o.expiry*1000).toLocaleString()+'</b></div>':''}<div class="notice">0% BarterBase fee. You only pay Base gas. Assets are held by the smart contract until the swap, cancellation, or expiry.</div>${counters.length?'<h4 style="margin:18px 0 8px">Counter-offers</h4>'+counters.map(c=>`<div class="detail-line"><span>#${c.id} · ${short(c.maker)}</span><b>${c.sweetener.gt(0)?'+ '+ethers.utils.formatEther(c.sweetener)+' ETH':''}</b></div>`).join(''):''}`;$('shareOfferBtn').onclick=()=>shareOffer(id);if(isMaker){$('acceptArea').innerHTML=`<button class="ghost danger" style="width:100%" onclick="cancelOffer(${id})">Cancel offer & reclaim</button>`+counters.filter(c=>c.active).map(c=>`<button class="primary" style="width:100%;margin-top:8px" onclick="acceptCounter(${c.id})">Accept counter #${c.id}</button>`).join('')}else{$('acceptArea').innerHTML=`<div class="field"><label>YOUR NFT TOKEN ID</label><input id="acceptToken" placeholder="Token ID you are giving"></div><button class="primary" style="width:100%" onclick="acceptOffer(${id})">Approve & accept swap</button><button class="ghost" style="width:100%;margin-top:8px" onclick="startCounter(${id})">Make a counter-offer</button>`}}
+async function getCounters(parentId){if(!configured())return[];try{const c=new ethers.Contract(CONFIG.CONTRACT,ABI,provider);const ids=await c.getCounterOfferIds(parentId);const out=[];for(const id of ids){const x=await c.counterOffers(id);if(x.active)out.push({id:id.toNumber(),maker:x.maker,offeredCollection:x.offeredCollection,offeredTokenId:x.offeredTokenId.toString(),sweetener:x.sweetenerWei,expiry:x.expiry.toNumber(),active:x.active})}return out}catch(e){console.error(e);return[]}}
+async function acceptOffer(id){if(!signer)return openWallet();const o=allOffers.find(x=>x.id===id);const tid=$('acceptToken')?.value.trim();if(!/^\d+$/.test(tid))return toast('Enter the NFT token ID you want to give.',true);if(o.maker.toLowerCase()===user.toLowerCase())return toast('You cannot accept your own offer.',true);try{await ensureBase();await approveNFT(o.wantedCollection,tid);const c=new ethers.Contract(CONFIG.CONTRACT,ABI,signer);const tx=await c.acceptOffer(id,tid);toast('Swap submitted…');await tx.wait();toast('Swap complete.');closeModal('offerModal');await refreshAll()}catch(e){toast(readError(e),true)}}
+async function cancelOffer(id){try{const c=new ethers.Contract(CONFIG.CONTRACT,ABI,signer);const tx=await c.cancelOffer(id);toast('Cancellation submitted…');await tx.wait();toast('NFT reclaimed.');closeModal('offerModal');await refreshAll()}catch(e){toast(readError(e),true)}}
+function startCounter(id){counterParentId=id;closeModal('offerModal');openWorkspace();const o=allOffers.find(x=>x.id===id);$('wantedCollection').value=o?.offeredCollection||'';$('wantedToken').value=o?.offeredTokenId||'';toast('Counter mode: choose your NFT and optional ETH, then publish. Your NFT will be escrowed.')} 
+async function acceptCounter(id){try{const c=new ethers.Contract(CONFIG.CONTRACT,ABI,signer);const tx=await c.acceptCounterOffer(id);toast('Accepting counter…');await tx.wait();toast('Counter swap complete.');closeModal('offerModal');await refreshAll()}catch(e){toast(readError(e),true)}}
+async function cancelCounter(id){try{const c=new ethers.Contract(CONFIG.CONTRACT,ABI,signer);const tx=await c.cancelCounterOffer(id);toast('Cancelling counter…');await tx.wait();toast('Counter NFT reclaimed.');await refreshAll()}catch(e){toast(readError(e),true)}}
+function shareOffer(id){const url=location.origin+location.pathname+'?offer='+id;navigator.clipboard?.writeText(url);toast('Offer link copied. Share it anywhere.')} 
+function maybeOpenSharedOffer(){const id=Number(new URLSearchParams(location.search).get('offer'));if(id&&allOffers.some(o=>o.id===id))setTimeout(()=>showOffer(id),250)}
+function showDash(type,b){document.querySelectorAll('.dashbtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');if(type==='how'){$('dashContent').innerHTML='<div class="notice"><b>How it works</b><br><br>1. Pick an NFT you own.<br>2. Add optional ETH sweetener.<br>3. Choose the collection/token you want.<br>4. Approve the escrow contract.<br>5. Publish and share your offer.<br><br>Offers are fee-free; only Base gas applies.</div>';return}if(type==='watch'){$('dashContent').innerHTML='<div class="notice"><b>Wallet matches</b><br><br>BarterBase automatically checks live offers against the NFTs currently in your wallet. Use the <b>Matches</b> tab to surface trades you can actually accept.</div>';return}loadMyOffers()}
+async function loadMyOffers(){if(!user)return;const x=allOffers.filter(o=>o.maker.toLowerCase()===user.toLowerCase());$('dashContent').innerHTML='<div class="my-list">'+(x.length?x.map(o=>`<div class="my-offer"><div><b>Offer #${o.id}</b><div class="muted">NFT #${o.offeredTokenId} → ${o.wantedAny?'Any NFT':'#'+o.wantedTokenId}${o.sweetener.gt(0)?' · '+ethers.utils.formatEther(o.sweetener)+' ETH':''}</div></div><button class="ghost" onclick="showOffer(${o.id})">Manage</button></div>`).join(''):'<div class="empty">No open offers yet.</div>')+'</div>'}
+window.addEventListener('load',()=>{if(!configured())$('offerFeed').innerHTML='<div class="empty" style="grid-column:1/-1">Your new V2 contract address goes in CONFIG at the top of this file. Until then, the UI stays in safe preview mode.</div>'});
+</script><script>
+(function(){var s=document.createElement('script');s.src='https://unpkg.com/@walletconnect/ethereum-provider@2.11.2/dist/index.umd.js';s.async=true;s.onerror=function(){console.warn('WalletConnect SDK failed to load')};document.head.appendChild(s)})();
+</script>
+</body></html>
