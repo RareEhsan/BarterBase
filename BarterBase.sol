@@ -53,6 +53,10 @@ contract BarterBaseV3 is IERC721Receiver {
     mapping(uint256 => uint256[]) private _counterIdsByParent;
 
     uint256 public constant MAX_COUNTERS_PER_OFFER = 5;
+    // Tracks only ACTIVE counters per parent offer, so cancelled/expired/invalidated
+    // counters do not permanently consume a slot (fixes lifetime-only limitation).
+    // Invariant: activeCounterCount[p] == number of counterOffers with active==true for parent p.
+    mapping(uint256 => uint256) public activeCounterCount;
     mapping(address => uint256) public pendingETH;
 
     uint256 private _lock = 1;
@@ -110,6 +114,7 @@ contract BarterBaseV3 is IERC721Receiver {
 
         IERC721(offeredCollection).safeTransferFrom(msg.sender, address(this), offeredTokenId);
 
+        // Stack-too-deep fix: group params in memory structs instead of many locals.
         offerId = nextOfferId++;
         offers[offerId] = Offer({
             maker: msg.sender,
@@ -124,8 +129,11 @@ contract BarterBaseV3 is IERC721Receiver {
             parentOfferId: 0,
             active: true
         });
-
-        emit OfferCreated(offerId, msg.sender, offeredCollection, offeredTokenId, sweetenerWei, wantedCollection, wantedTokenId, wantedAny, expiry, taker, 0);
+        emit OfferCreated(
+            offerId, offers[offerId].maker, offers[offerId].offeredCollection, offers[offerId].offeredTokenId,
+            offers[offerId].sweetenerWei, offers[offerId].wantedCollection, offers[offerId].wantedTokenId,
+            offers[offerId].wantedAny, offers[offerId].expiry, offers[offerId].taker, 0
+        );
     }
 
     function acceptOffer(uint256 offerId, uint256 takerTokenId) external nonReentrant {
@@ -184,7 +192,7 @@ contract BarterBaseV3 is IERC721Receiver {
         require(p.wantedAny || offeredTokenId == p.wantedTokenId, "WRONG_TOKEN");
         require(expiry == 0 || expiry > block.timestamp, "BAD_EXPIRY");
         require(msg.value == sweetenerWei, "BAD_ETH_VALUE");
-        require(_counterIdsByParent[parentOfferId].length < MAX_COUNTERS_PER_OFFER, "TOO_MANY_COUNTERS");
+        require(activeCounterCount[parentOfferId] < MAX_COUNTERS_PER_OFFER, "TOO_MANY_COUNTERS");
 
         IERC721(offeredCollection).safeTransferFrom(msg.sender, address(this), offeredTokenId);
 
@@ -199,6 +207,7 @@ contract BarterBaseV3 is IERC721Receiver {
             active: true
         });
         _counterIdsByParent[parentOfferId].push(counterOfferId);
+        activeCounterCount[parentOfferId]++;
 
         emit CounterOfferCreated(counterOfferId, parentOfferId, msg.sender, offeredCollection, offeredTokenId, sweetenerWei, expiry);
     }
@@ -218,6 +227,7 @@ contract BarterBaseV3 is IERC721Receiver {
 
         c.active = false;
         p.active = false;
+        activeCounterCount[c.parentOfferId]--;
         _invalidateCounters(c.parentOfferId, counterOfferId);
 
         // Counter maker receives the parent's escrow.
@@ -236,6 +246,7 @@ contract BarterBaseV3 is IERC721Receiver {
         require(c.active, "COUNTER_NOT_ACTIVE");
         require(c.maker == msg.sender, "NOT_COUNTER_MAKER");
         c.active = false;
+        activeCounterCount[c.parentOfferId]--;
         _returnEscrow(c.maker, c.offeredCollection, c.offeredTokenId, c.sweetenerWei);
         emit CounterOfferCancelled(counterOfferId);
     }
@@ -245,6 +256,7 @@ contract BarterBaseV3 is IERC721Receiver {
         require(c.active, "COUNTER_NOT_ACTIVE");
         require((c.expiry != 0 && block.timestamp > c.expiry) || (offers[c.parentOfferId].expiry != 0 && block.timestamp > offers[c.parentOfferId].expiry), "NOT_EXPIRED");
         c.active = false;
+        activeCounterCount[c.parentOfferId]--;
         _returnEscrow(c.maker, c.offeredCollection, c.offeredTokenId, c.sweetenerWei);
         emit CounterOfferExpired(counterOfferId);
     }
@@ -274,16 +286,19 @@ contract BarterBaseV3 is IERC721Receiver {
 
     function _invalidateCounters(uint256 parentOfferId, uint256 exceptCounterId) internal {
         uint256[] storage ids = _counterIdsByParent[parentOfferId];
+        uint256 invalidated;
         for (uint256 i = 0; i < ids.length; i++) {
             uint256 id = ids[i];
             if (id == exceptCounterId) continue;
             CounterOffer storage c = counterOffers[id];
             if (c.active) {
                 c.active = false;
+                invalidated++;
                 _returnEscrow(c.maker, c.offeredCollection, c.offeredTokenId, c.sweetenerWei);
                 emit CounterOfferCancelled(id);
             }
         }
+        activeCounterCount[parentOfferId] -= invalidated;
     }
 
     receive() external payable { revert("DIRECT_ETH_DISABLED"); }

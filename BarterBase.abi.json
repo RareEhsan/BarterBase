@@ -1,0 +1,787 @@
+[
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "uint256",
+    "name": "counterOfferId",
+    "type": "uint256"
+   },
+   {
+    "indexed": true,
+    "internalType": "uint256",
+    "name": "parentOfferId",
+    "type": "uint256"
+   }
+  ],
+  "name": "CounterOfferAccepted",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "uint256",
+    "name": "counterOfferId",
+    "type": "uint256"
+   }
+  ],
+  "name": "CounterOfferCancelled",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "uint256",
+    "name": "counterOfferId",
+    "type": "uint256"
+   },
+   {
+    "indexed": true,
+    "internalType": "uint256",
+    "name": "parentOfferId",
+    "type": "uint256"
+   },
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "maker",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "address",
+    "name": "offeredCollection",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint256",
+    "name": "offeredTokenId",
+    "type": "uint256"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint256",
+    "name": "sweetenerWei",
+    "type": "uint256"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint64",
+    "name": "expiry",
+    "type": "uint64"
+   }
+  ],
+  "name": "CounterOfferCreated",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "uint256",
+    "name": "counterOfferId",
+    "type": "uint256"
+   }
+  ],
+  "name": "CounterOfferExpired",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "uint256",
+    "name": "offerId",
+    "type": "uint256"
+   },
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "taker",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint256",
+    "name": "takerTokenId",
+    "type": "uint256"
+   }
+  ],
+  "name": "OfferAccepted",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "uint256",
+    "name": "offerId",
+    "type": "uint256"
+   }
+  ],
+  "name": "OfferCancelled",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "uint256",
+    "name": "offerId",
+    "type": "uint256"
+   },
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "maker",
+    "type": "address"
+   },
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "offeredCollection",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint256",
+    "name": "offeredTokenId",
+    "type": "uint256"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint256",
+    "name": "sweetenerWei",
+    "type": "uint256"
+   },
+   {
+    "indexed": false,
+    "internalType": "address",
+    "name": "wantedCollection",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint256",
+    "name": "wantedTokenId",
+    "type": "uint256"
+   },
+   {
+    "indexed": false,
+    "internalType": "bool",
+    "name": "wantedAny",
+    "type": "bool"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint64",
+    "name": "expiry",
+    "type": "uint64"
+   },
+   {
+    "indexed": false,
+    "internalType": "address",
+    "name": "taker",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint256",
+    "name": "parentOfferId",
+    "type": "uint256"
+   }
+  ],
+  "name": "OfferCreated",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "uint256",
+    "name": "offerId",
+    "type": "uint256"
+   }
+  ],
+  "name": "OfferExpired",
+  "type": "event"
+ },
+ {
+  "inputs": [],
+  "name": "MAX_COUNTERS_PER_OFFER",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "counterOfferId",
+    "type": "uint256"
+   }
+  ],
+  "name": "acceptCounterOffer",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "offerId",
+    "type": "uint256"
+   },
+   {
+    "internalType": "uint256",
+    "name": "takerTokenId",
+    "type": "uint256"
+   }
+  ],
+  "name": "acceptOffer",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "name": "activeCounterCount",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "counterOfferId",
+    "type": "uint256"
+   }
+  ],
+  "name": "cancelCounterOffer",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "offerId",
+    "type": "uint256"
+   }
+  ],
+  "name": "cancelOffer",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "name": "counterOffers",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "parentOfferId",
+    "type": "uint256"
+   },
+   {
+    "internalType": "address",
+    "name": "maker",
+    "type": "address"
+   },
+   {
+    "internalType": "address",
+    "name": "offeredCollection",
+    "type": "address"
+   },
+   {
+    "internalType": "uint256",
+    "name": "offeredTokenId",
+    "type": "uint256"
+   },
+   {
+    "internalType": "uint256",
+    "name": "sweetenerWei",
+    "type": "uint256"
+   },
+   {
+    "internalType": "uint64",
+    "name": "expiry",
+    "type": "uint64"
+   },
+   {
+    "internalType": "bool",
+    "name": "active",
+    "type": "bool"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "parentOfferId",
+    "type": "uint256"
+   },
+   {
+    "internalType": "address",
+    "name": "offeredCollection",
+    "type": "address"
+   },
+   {
+    "internalType": "uint256",
+    "name": "offeredTokenId",
+    "type": "uint256"
+   },
+   {
+    "internalType": "uint256",
+    "name": "sweetenerWei",
+    "type": "uint256"
+   },
+   {
+    "internalType": "uint64",
+    "name": "expiry",
+    "type": "uint64"
+   }
+  ],
+  "name": "createCounterOffer",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "counterOfferId",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "payable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "taker",
+    "type": "address"
+   },
+   {
+    "internalType": "address",
+    "name": "offeredCollection",
+    "type": "address"
+   },
+   {
+    "internalType": "uint256",
+    "name": "offeredTokenId",
+    "type": "uint256"
+   },
+   {
+    "internalType": "uint256",
+    "name": "sweetenerWei",
+    "type": "uint256"
+   },
+   {
+    "internalType": "address",
+    "name": "wantedCollection",
+    "type": "address"
+   },
+   {
+    "internalType": "uint256",
+    "name": "wantedTokenId",
+    "type": "uint256"
+   },
+   {
+    "internalType": "bool",
+    "name": "wantedAny",
+    "type": "bool"
+   },
+   {
+    "internalType": "uint64",
+    "name": "expiry",
+    "type": "uint64"
+   }
+  ],
+  "name": "createOffer",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "offerId",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "payable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "counterOfferId",
+    "type": "uint256"
+   }
+  ],
+  "name": "expireCounterOffer",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "offerId",
+    "type": "uint256"
+   }
+  ],
+  "name": "expireOffer",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "counterOfferId",
+    "type": "uint256"
+   }
+  ],
+  "name": "getCounterOffer",
+  "outputs": [
+   {
+    "components": [
+     {
+      "internalType": "uint256",
+      "name": "parentOfferId",
+      "type": "uint256"
+     },
+     {
+      "internalType": "address",
+      "name": "maker",
+      "type": "address"
+     },
+     {
+      "internalType": "address",
+      "name": "offeredCollection",
+      "type": "address"
+     },
+     {
+      "internalType": "uint256",
+      "name": "offeredTokenId",
+      "type": "uint256"
+     },
+     {
+      "internalType": "uint256",
+      "name": "sweetenerWei",
+      "type": "uint256"
+     },
+     {
+      "internalType": "uint64",
+      "name": "expiry",
+      "type": "uint64"
+     },
+     {
+      "internalType": "bool",
+      "name": "active",
+      "type": "bool"
+     }
+    ],
+    "internalType": "struct BarterBaseV3.CounterOffer",
+    "name": "",
+    "type": "tuple"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "parentOfferId",
+    "type": "uint256"
+   }
+  ],
+  "name": "getCounterOfferIds",
+  "outputs": [
+   {
+    "internalType": "uint256[]",
+    "name": "",
+    "type": "uint256[]"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "offerId",
+    "type": "uint256"
+   }
+  ],
+  "name": "getOffer",
+  "outputs": [
+   {
+    "components": [
+     {
+      "internalType": "address",
+      "name": "maker",
+      "type": "address"
+     },
+     {
+      "internalType": "address",
+      "name": "taker",
+      "type": "address"
+     },
+     {
+      "internalType": "address",
+      "name": "offeredCollection",
+      "type": "address"
+     },
+     {
+      "internalType": "uint256",
+      "name": "offeredTokenId",
+      "type": "uint256"
+     },
+     {
+      "internalType": "uint256",
+      "name": "sweetenerWei",
+      "type": "uint256"
+     },
+     {
+      "internalType": "address",
+      "name": "wantedCollection",
+      "type": "address"
+     },
+     {
+      "internalType": "uint256",
+      "name": "wantedTokenId",
+      "type": "uint256"
+     },
+     {
+      "internalType": "bool",
+      "name": "wantedAny",
+      "type": "bool"
+     },
+     {
+      "internalType": "uint64",
+      "name": "expiry",
+      "type": "uint64"
+     },
+     {
+      "internalType": "uint256",
+      "name": "parentOfferId",
+      "type": "uint256"
+     },
+     {
+      "internalType": "bool",
+      "name": "active",
+      "type": "bool"
+     }
+    ],
+    "internalType": "struct BarterBaseV3.Offer",
+    "name": "",
+    "type": "tuple"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "nextCounterOfferId",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "nextOfferId",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "name": "offers",
+  "outputs": [
+   {
+    "internalType": "address",
+    "name": "maker",
+    "type": "address"
+   },
+   {
+    "internalType": "address",
+    "name": "taker",
+    "type": "address"
+   },
+   {
+    "internalType": "address",
+    "name": "offeredCollection",
+    "type": "address"
+   },
+   {
+    "internalType": "uint256",
+    "name": "offeredTokenId",
+    "type": "uint256"
+   },
+   {
+    "internalType": "uint256",
+    "name": "sweetenerWei",
+    "type": "uint256"
+   },
+   {
+    "internalType": "address",
+    "name": "wantedCollection",
+    "type": "address"
+   },
+   {
+    "internalType": "uint256",
+    "name": "wantedTokenId",
+    "type": "uint256"
+   },
+   {
+    "internalType": "bool",
+    "name": "wantedAny",
+    "type": "bool"
+   },
+   {
+    "internalType": "uint64",
+    "name": "expiry",
+    "type": "uint64"
+   },
+   {
+    "internalType": "uint256",
+    "name": "parentOfferId",
+    "type": "uint256"
+   },
+   {
+    "internalType": "bool",
+    "name": "active",
+    "type": "bool"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "",
+    "type": "address"
+   },
+   {
+    "internalType": "address",
+    "name": "",
+    "type": "address"
+   },
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   },
+   {
+    "internalType": "bytes",
+    "name": "",
+    "type": "bytes"
+   }
+  ],
+  "name": "onERC721Received",
+  "outputs": [
+   {
+    "internalType": "bytes4",
+    "name": "",
+    "type": "bytes4"
+   }
+  ],
+  "stateMutability": "pure",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "",
+    "type": "address"
+   }
+  ],
+  "name": "pendingETH",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "withdrawPendingETH",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "stateMutability": "payable",
+  "type": "receive"
+ }
+]
